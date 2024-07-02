@@ -24,5 +24,5 @@ impl Pieces {
     pub const KING: usize = 5;
 }
 
-pub const NAME: &str = "chess-bot";
+pub const NAME: &str = "Iridium";
 pub const AUTHOR: &str = "TotalTaxAmount";
