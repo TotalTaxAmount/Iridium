@@ -1,13 +1,4 @@
-#[derive(PartialEq, Eq, PartialOrd, Clone, Copy, Debug, Default, Hash)]
-pub struct BitBoard(pub u64);
-
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct Board {
-  bb_sides: [BitBoard; 2],
-
-  bb_pieces: [[BitBoard; 6]; 2]
-}
-
 pub struct Sides;
 impl Sides {
     pub const WHITE: usize = 0;
@@ -22,6 +13,32 @@ impl Pieces {
     pub const ROOK: usize = 3;
     pub const QUEEN: usize = 4;
     pub const KING: usize = 5;
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Clone, Copy, Debug, Default, Hash)]
+pub struct BitBoard(pub u64);
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct Board {
+  pub bb_sides: [BitBoard; 2],
+
+  pub bb_pieces: [[BitBoard; 6]; 2],
+
+  pub turn: Sides,
+
+  pub white_can_oo: bool,
+
+  pub black_can_oo: bool,
+
+  pub white_can_ooo: bool,
+
+  pub black_can_ooo: bool,
+
+  pub en_passant_square: Option<u64>,
+
+  pub half_moves: u64,
+
+  pub full_moves: u64,
 }
 
 pub const NAME: &str = "Iridium";

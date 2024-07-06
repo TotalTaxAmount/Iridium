@@ -22,7 +22,3 @@ pub fn print_bitboard(bitboard: u64) {
       println!();
   }
 }
-
-pub mod fen {
-
-}

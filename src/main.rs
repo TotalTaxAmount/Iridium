@@ -1,8 +1,8 @@
 use std::process::exit;
 
 mod lib;
+mod fen;
 mod consts;
-
 
 fn ucimode() {
   // Identification
@@ -13,8 +13,6 @@ fn ucimode() {
   // Ready
   println!("uciok");
 }
-
-fn init() {}
 
 fn main() {
   
