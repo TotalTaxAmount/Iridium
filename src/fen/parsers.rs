@@ -46,9 +46,9 @@ impl Parsers {
               Some(n) => file += n as usize,
               None => {
                 let piece = Pieces::from_char(piece_char)?;
-                let bit_pos = rank * 8 + file;
+                let bit_mask = rank * 8 + file;
 
-                placement[piece.0 as usize][piece.1 as usize].0 |= 1u64 << bit_pos;
+                placement[piece.0 as usize][piece.1 as usize].0 |= 1u64 << bit_mask;
                 file += 1;
               }
             }
@@ -57,7 +57,7 @@ impl Parsers {
         Ok(placement)
     }
 
-    fn parse_en_passant(part: &str) -> Result<Option<u32>, Error> {
+    fn parse_en_passant(part: &str) -> Result<Option<BitBoard>, Error> {
       if part == "-" {
         return Ok(None);
       }
@@ -82,11 +82,11 @@ impl Parsers {
       };
 
       let file = match file.to_digit(10) {
-        Some(n) => n,
+        Some(n) => u64::from(n),
         None => return Ok(None), 
       };
 
-      Ok(Some(rank * 8 + file))
+      Ok(Some(BitBoard(1u64 << rank * 8 + file)))
     }
 
     fn parse_side_to_play(part: &str) -> Result<Sides, Error> {

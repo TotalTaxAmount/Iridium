@@ -52,7 +52,7 @@ pub struct Board {
 
   pub black_can_ooo: bool,
 
-  pub en_passant_square: Option<u32>,
+  pub en_passant_square: Option<BitBoard>,
 
   pub half_moves: u64,
 
@@ -66,7 +66,8 @@ impl Display for Board {
       println!("Black castling rights -- oo: {}, ooo: {}", self.black_can_oo, self.black_can_ooo);
       println!("Halfmoves: {}", self.half_moves);
       println!("Fullmoves: {}", self.full_moves);
-      println!("En Passant target: {:#?}", self.en_passant_square);
+      println!("En Passant target:");
+      print_bitboard(self.en_passant_square.unwrap());
 
       for (i, board) in self.bb_pieces.iter().enumerate() {
         println!("Side: {i}");
