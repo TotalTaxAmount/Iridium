@@ -1,5 +1,6 @@
 use std::process::exit;
 use fen::parsers::Parsers;
+use Iridium::move_gen;
 
 mod lib;
 mod fen;
@@ -24,6 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "register" => {},
             "ucinewgame" => {},
             "position" => {println!("{}", Parsers::from_fen("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")?)},
+            "test" => {println!("{:?}", move_gen::bishop_moves(9))},
             "go" => {},
             "stop" => {},
             "ponder" => {},

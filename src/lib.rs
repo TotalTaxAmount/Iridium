@@ -1,4 +1,4 @@
-use std::{fmt::{Display, Error}, io};
+use std::{fmt::Display, io};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 #[repr(usize)]
@@ -7,6 +7,17 @@ pub enum Sides {
     BLACK = 1,
 }
 
+impl Sides {
+    pub fn from_usize(i: usize) -> Option<Sides>{
+      match i {
+          0 => Some(Self::WHITE),
+          1 => Some(Self::BLACK),
+          _ => None
+      }
+    }
+}
+
+#[derive(Debug, Clone)]
 #[repr(usize)]
 pub enum Pieces {
     PAWN = 0,
@@ -18,18 +29,30 @@ pub enum Pieces {
 }
 
 impl Pieces {
-    pub fn from_char(c: char) -> Result<(Sides, Pieces), Error> {
+    pub fn from_char(c: char) -> Option<(Sides, Pieces)> {
       let piece = match c {
-        'p' | 'P' => Pieces::PAWN,
-        'b' | 'B' => Pieces::BISHOP,
-        'n' | 'N' => Pieces::KNIGHT,
-        'r' | 'R' => Pieces::ROOK,
-        'q' | 'Q' => Pieces::QUEEN,
-        'k' | 'K' => Pieces::KING,
-        _ => Pieces::PAWN
+        'p' | 'P' => Self::PAWN,
+        'b' | 'B' => Self::BISHOP,
+        'n' | 'N' => Self::KNIGHT,
+        'r' | 'R' => Self::ROOK,
+        'q' | 'Q' => Self::QUEEN,
+        'k' | 'K' => Self::KING,
+        _ => return None
       };
 
-      Ok((if c.is_uppercase() { Sides::WHITE } else { Sides::BLACK }, piece))
+      Some((if c.is_uppercase() { Sides::WHITE } else { Sides::BLACK }, piece))
+    }
+
+    pub fn from_usize(i: usize) -> Option<Pieces> {
+      match i {
+         0 => Some(Self::PAWN),
+         1 => Some(Self::BISHOP),
+         2 => Some(Self::KNIGHT),
+         3 => Some(Self::ROOK),
+         4 => Some(Self::QUEEN),
+         5 => Some(Self::KING),
+         _ => None 
+      }
     }
 }
 
@@ -70,9 +93,9 @@ impl Display for Board {
       print_bitboard(self.en_passant_square.unwrap());
 
       for (i, board) in self.bb_pieces.iter().enumerate() {
-        println!("Side: {i}");
+        println!("Side: {:?}", Sides::from_usize(i).unwrap());
         for (i, piece) in board.iter().enumerate() {
-          println!("Piece {i}");
+          println!("Piece: {:?}", Pieces::from_usize(i).unwrap());
           print_bitboard(*piece);
         }
       }
@@ -103,5 +126,36 @@ pub fn print_bitboard(bitboard: BitBoard) {
           print!("{char} ");
       }
       println!();
+  }
+}
+
+pub mod move_gen {
+    use std::cmp::{self, min};
+
+  pub fn bishop_moves(p: isize) -> Vec<isize> {
+    let mut moves: Vec<isize> = vec![];
+    let (rank, file) = (p / 8, 0 % 8);
+
+    // NW
+    for k in 0..8 {
+        moves.push(p + 7 * k);
+    }
+
+    // NE
+    for k in 0..8 {
+      moves.push(p + 9 * k);
+    }
+
+    // SW
+    for k in 0..8 {
+        moves.push(p - 7 * k);
+    }
+
+    // SE
+    for k in 0..8 {
+      moves.push(p - 9 * k);
+    }
+
+    moves
   }
 }

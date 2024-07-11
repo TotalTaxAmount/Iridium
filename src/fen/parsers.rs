@@ -45,10 +45,10 @@ impl Parsers {
           match piece_char.to_digit(10) {
               Some(n) => file += n as usize,
               None => {
-                let piece = Pieces::from_char(piece_char)?;
+                let piece = Pieces::from_char(piece_char).ok_or(Error);
                 let bit_mask = rank * 8 + file;
 
-                placement[piece.0 as usize][piece.1 as usize].0 |= 1u64 << bit_mask;
+                placement[piece.clone().unwrap().0 as usize][piece.unwrap().1 as usize].0 |= 1u64 << bit_mask;
                 file += 1;
               }
             }
@@ -67,22 +67,24 @@ impl Parsers {
       }
 
       let chars: Vec<_> = part.chars().collect();
-      let (rank, file) = (chars[0], chars[1]);
+      let (file, rank) = (chars[0], chars[1]);
+      println!("{}{}", rank, file);
 
-      let rank = match rank {
-          'a' => 1,
-          'b' => 2,
-          'c' => 3,
-          'd' => 4,
-          'e' => 5,
-          'f' => 6,
-          'g' => 7,
-          'h' => 8,
+      let file = match file {
+          'a' => 0,
+          'b' => 1,
+          'c' => 2,
+          'd' => 3,
+          'e' => 4,
+          'f' => 5,
+          'g' => 6,
+          'h' => 7,
           _ => 0,
       };
 
-      let file = match file.to_digit(10) {
-        Some(n) => u64::from(n),
+
+      let rank = match rank.to_digit(10) {
+        Some(n) => u64::from(n) - 1,
         None => return Ok(None), 
       };
 
