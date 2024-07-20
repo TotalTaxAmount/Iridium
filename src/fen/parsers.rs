@@ -1,6 +1,6 @@
-use std::{fmt::Error, num::ParseIntError};
+use std::{fmt::Error};
 
-use crate::lib::{Board, Sides, Pieces, BitBoard};
+use Iridium::{Board, Sides, Pieces, BitBoard};
 
 pub struct Parsers;
 impl Parsers {
@@ -24,6 +24,7 @@ impl Parsers {
         en_passant_square: en_passant?,
         half_moves: halfmoves?,
         full_moves: fullmoves?,
+        score: 0,
       })
     }
 
@@ -57,7 +58,7 @@ impl Parsers {
         Ok(placement)
     }
 
-    fn parse_en_passant(part: &str) -> Result<Option<BitBoard>, Error> {
+    fn parse_en_passant(part: &str) -> Result<Option<u8>, Error> {
       if part == "-" {
         return Ok(None);
       }
@@ -84,11 +85,11 @@ impl Parsers {
 
 
       let rank = match rank.to_digit(10) {
-        Some(n) => u64::from(n) - 1,
+        Some(n) => n as u8 - 1,
         None => return Ok(None), 
       };
 
-      Ok(Some(BitBoard(1u64 << rank * 8 + file)))
+      Ok(Some(rank * 8 + file))
     }
 
     fn parse_side_to_play(part: &str) -> Result<Sides, Error> {

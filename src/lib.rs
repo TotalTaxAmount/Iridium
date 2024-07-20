@@ -1,6 +1,6 @@
 use std::{fmt::Display, io};
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[repr(usize)]
 pub enum Sides {
     WHITE = 0,
@@ -17,7 +17,7 @@ impl Sides {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(usize)]
 pub enum Pieces {
     PAWN = 0,
@@ -75,11 +75,13 @@ pub struct Board {
 
   pub black_can_ooo: bool,
 
-  pub en_passant_square: Option<BitBoard>,
+  pub en_passant_square: Option<u8>,
 
   pub half_moves: u64,
 
   pub full_moves: u64,
+
+  pub score: u64,
 }
 
 impl Display for Board {
@@ -89,8 +91,7 @@ impl Display for Board {
       println!("Black castling rights -- oo: {}, ooo: {}", self.black_can_oo, self.black_can_ooo);
       println!("Halfmoves: {}", self.half_moves);
       println!("Fullmoves: {}", self.full_moves);
-      println!("En Passant target:");
-      print_bitboard(self.en_passant_square.unwrap());
+      println!("En Passant target: {}", self.en_passant_square.unwrap());
 
       for (i, board) in self.bb_pieces.iter().enumerate() {
         println!("Side: {:?}", Sides::from_usize(i).unwrap());
@@ -126,36 +127,5 @@ pub fn print_bitboard(bitboard: BitBoard) {
           print!("{char} ");
       }
       println!();
-  }
-}
-
-pub mod move_gen {
-    use std::cmp::{self, min};
-
-  pub fn bishop_moves(p: isize) -> Vec<isize> {
-    let mut moves: Vec<isize> = vec![];
-    let (rank, file) = (p / 8, 0 % 8);
-
-    // NW
-    for k in 0..8 {
-        moves.push(p + 7 * k);
-    }
-
-    // NE
-    for k in 0..8 {
-      moves.push(p + 9 * k);
-    }
-
-    // SW
-    for k in 0..8 {
-        moves.push(p - 7 * k);
-    }
-
-    // SE
-    for k in 0..8 {
-      moves.push(p - 9 * k);
-    }
-
-    moves
   }
 }
