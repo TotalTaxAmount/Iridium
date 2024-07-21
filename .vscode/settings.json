@@ -4,6 +4,7 @@
     "fullmoves",
     "halfmoves",
     "isready",
+    "movegen",
     "ponderhint",
     "readyok",
     "repr",

@@ -1,4 +1,4 @@
-use std::{fmt::Display, io};
+use std::{default, fmt::Display, io};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[repr(usize)]

@@ -1,18 +1,45 @@
-use std::{fmt::Error};
+use core::fmt;
+use std::{error, fmt::Error};
 
 use Iridium::{Board, Sides, Pieces, BitBoard};
 
+#[derive(Debug, Clone, Copy)]
+pub struct FenError;
+impl fmt::Display for FenError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Invalid FEN")
+    }
+}
+
+impl error::Error for FenError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        None
+    }
+
+    fn description(&self) -> &str {
+        "Failed to parse FEN"
+    }
+
+    fn cause(&self) -> Option<&dyn error::Error> {
+        self.source()
+    }
+}
+
 pub struct Parsers;
 impl Parsers {
-    pub fn from_fen(fen: &str) -> Result<Board, Error> {
-      let parts: Vec<_> = fen.split(" ").collect();
+    pub fn from_fen(fen: &[&str]) -> Result<Board, FenError> {
+      // let parts: Vec<_> = fen.split(" ").collect();
+      if fen.len() < 6 {
+        println!("Invalid FEN");
+        return Err(FenError);
+      }
       
-      let pos = Self::parse_position(parts[0]);
-      let side_to_play = Self::parse_side_to_play(parts[1]);
-      let castle_rights = Self::parse_castling(parts[2]);
-      let en_passant = Self::parse_en_passant(parts[3]);
-      let halfmoves = Self::parse_halfmoves(parts[4]);
-      let fullmoves = Self::parse_fullmoves(parts[5]);
+      let pos = Self::parse_position(fen[0]);
+      let side_to_play = Self::parse_side_to_play(fen[1]);
+      let castle_rights = Self::parse_castling(fen[2]);
+      let en_passant = Self::parse_en_passant(fen[3]);
+      let halfmoves = Self::parse_halfmoves(fen[4]);
+      let fullmoves = Self::parse_fullmoves(fen[5]);
 
       Ok(Board {
         turn: side_to_play?,
@@ -28,7 +55,7 @@ impl Parsers {
       })
     }
 
-    fn parse_position(part: &str) -> Result<[[BitBoard; 6]; 2], Error> {
+    fn parse_position(part: &str) -> Result<[[BitBoard; 6]; 2], FenError> {
       let ranks: Vec<_> = part.split("/").collect();
       let mut placement: [[BitBoard; 6]; 2] = [
         [BitBoard(0); 6],
@@ -36,7 +63,7 @@ impl Parsers {
       ];
     
       if ranks.len() != 8 {
-        return Err(Error)
+        return Err(FenError)
       }
 
       for (rank, pieces) in ranks.iter().rev().enumerate() {
@@ -46,7 +73,7 @@ impl Parsers {
           match piece_char.to_digit(10) {
               Some(n) => file += n as usize,
               None => {
-                let piece = Pieces::from_char(piece_char).ok_or(Error);
+                let piece = Pieces::from_char(piece_char).ok_or(FenError);
                 let bit_mask = rank * 8 + file;
 
                 placement[piece.clone().unwrap().0 as usize][piece.unwrap().1 as usize].0 |= 1u64 << bit_mask;
@@ -58,18 +85,17 @@ impl Parsers {
         Ok(placement)
     }
 
-    fn parse_en_passant(part: &str) -> Result<Option<u8>, Error> {
+    fn parse_en_passant(part: &str) -> Result<Option<u8>, FenError> {
       if part == "-" {
         return Ok(None);
       }
 
       if part.len() != 2 {
-        return Err(Error);
+        return Err(FenError);
       }
 
       let chars: Vec<_> = part.chars().collect();
       let (file, rank) = (chars[0], chars[1]);
-      println!("{}{}", rank, file);
 
       let file = match file {
           'a' => 0,
@@ -92,15 +118,15 @@ impl Parsers {
       Ok(Some(rank * 8 + file))
     }
 
-    fn parse_side_to_play(part: &str) -> Result<Sides, Error> {
+    fn parse_side_to_play(part: &str) -> Result<Sides, FenError> {
       match part {
           "w" => Ok(Sides::WHITE),
           "b" => Ok(Sides::BLACK),
-          _ => Err(Error)
+          _ => Err(FenError)
       }
     }
 
-    fn parse_castling(part: &str) -> Result<(bool, bool, bool, bool), Error> {
+    fn parse_castling(part: &str) -> Result<(bool, bool, bool, bool), FenError> {
       Ok((
         part.contains("K"),
         part.contains("Q"),
@@ -109,17 +135,17 @@ impl Parsers {
       ))
     }
 
-    fn parse_fullmoves(part: &str) -> Result<u64, Error> {
+    fn parse_fullmoves(part: &str) -> Result<u64, FenError> {
       match part.parse() {
           Ok(n) => Ok(n),
-          Err(_) => Err(Error),
+          Err(_) => Err(FenError),
       }
     }
     
-    fn parse_halfmoves(part: &str) -> Result<u64, Error> {
+    fn parse_halfmoves(part: &str) -> Result<u64, FenError> {
       match part.parse() {
           Ok(n) => Ok(n),
-          Err(_) => Err(Error),
+          Err(_) => Err(FenError),
       }
     }
 
