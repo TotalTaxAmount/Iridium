@@ -5,10 +5,12 @@
     "halfmoves",
     "isready",
     "movegen",
+    "movetime",
     "ponderhint",
     "readyok",
     "repr",
     "setoption",
+    "startpos",
     "ucimode",
     "ucinewgame",
     "uciok"

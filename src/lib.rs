@@ -91,7 +91,7 @@ impl Display for Board {
       println!("Black castling rights -- oo: {}, ooo: {}", self.black_can_oo, self.black_can_ooo);
       println!("Halfmoves: {}", self.half_moves);
       println!("Fullmoves: {}", self.full_moves);
-      println!("En Passant target: {}", self.en_passant_square.unwrap());
+      println!("En Passant target: {:?}", self.en_passant_square);
 
       for (i, board) in self.bb_pieces.iter().enumerate() {
         println!("Side: {:?}", Sides::from_usize(i).unwrap());
@@ -101,6 +101,40 @@ impl Display for Board {
         }
       }
       Ok(())
+    }
+}
+
+impl Default for Board {
+    fn default() -> Self {
+        Self { 
+          bb_pieces: [
+            [
+              BitBoard(65280), // Pawns
+              BitBoard(36), // Bishops
+              BitBoard(66), // Knights
+              BitBoard(129), // Rooks
+              BitBoard(8), // Queen
+              BitBoard(16) // King
+            ],
+            [
+              BitBoard(71776119061217280), // Pawns
+              BitBoard(2594073385365405696), // Bishops
+              BitBoard(4755801206503243776), // Knights
+              BitBoard(9295429630892703744), // Rooks
+              BitBoard(576460752303423488), // Queen
+              BitBoard(1152921504606846976) // King
+            ]
+          ], 
+          turn: Sides::WHITE, 
+          white_can_oo: true, 
+          black_can_oo: true, 
+          white_can_ooo: true, 
+          black_can_ooo: true, 
+          en_passant_square: None, 
+          half_moves: 0, 
+          full_moves: 0, 
+          score: 0
+       }
     }
 }
 

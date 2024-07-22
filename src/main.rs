@@ -1,5 +1,5 @@
-use std::process::exit;
-use fen::parsers::Parsers;
+use std::{env::Args, process::exit};
+use fen::parsers::{Constraints, Parsers};
 use Iridium::Board;
 
 mod lib;
@@ -19,32 +19,43 @@ fn ucimode() {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   let mut board: Board;
+  let mut constraints: Constraints;
+
   loop {
     let input = lib::get_input("");
-    let command: Vec<&str> = input.split(" ").collect();
-    match command[0] {
+    let args: Vec<&str> = input.split(" ").collect();
+    let command: &str = args.first().unwrap_or(&"");
+    match command {
           "uci" => ucimode(),
           "isready" => {println!("readyok")},
           "setoption" => {},
           "register" => {},
           "ucinewgame" => {},
           "position" => {
-            if command.len() < 7 {
+            if args.len() < 2 {
               println!("Invalid arguments");
               continue;
             }
 
-            match Parsers::from_fen(&command[1..7]) {
+            if args[1] == "startpos" {
+              board = Board::default();
+              continue;
+            }
+
+            match Parsers::from_fen(&&args[1..7]) {
                 Ok(b) => { board = b },
                 Err(e) => {println!("{}", e)}
             } 
           },
-          "go" => {},
+          "go" => {
+            constraints = Parsers::parse_time(&args);
+            println!("{:?}", constraints);
+          },
           "stop" => {},
           "ponder" => {},
           "ponderhint" => {},
           "quit" => exit(0),
-          _ => println!("Error unknown command: {}", command.concat()),
+          _ => println!("Error unknown command: {}", command),
     }
   }
 }
