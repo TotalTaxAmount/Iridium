@@ -26,15 +26,15 @@ impl error::Error for FenError {
 }
 
 #[derive(PartialEq, Debug)]
-pub struct UCITimer {
-  time_msec: [i32; 2],
-  inc_msec: [i32; 2],
-  mtg: u32,
+pub struct TimerKeeper {
+  pub time_msec: [i32; 2],
+  pub inc_msec: [i32; 2],
+  pub mtg: u32,
 }
 
-impl UCITimer {
+impl TimerKeeper {
     fn new() -> Self {
-      UCITimer {
+      TimerKeeper {
         time_msec: [0; 2],
         inc_msec: [0; 2],
         mtg: 0,
@@ -48,7 +48,7 @@ impl UCITimer {
     }
 }
 
-impl fmt::Display for UCITimer {
+impl fmt::Display for TimerKeeper {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "time: [ w: {}ms b: {}ms ] inc: [ w: {}ms b: {}ms ] moves to go: {}", 
         &self.time_msec[0],
@@ -62,19 +62,19 @@ impl fmt::Display for UCITimer {
 
 #[derive(PartialEq, Debug)]
 pub struct Constraints {
-  time: Option<UCITimer>,
-  depth: Option<u32>, 
-  nodes: Option<u32>,
-  mate: Option<u32>,
-  movetime: Option<u32>,
-  infinite: bool,
-  ponder: bool
+  pub time: Option<TimerKeeper>,
+  pub depth: Option<u32>, 
+  pub nodes: Option<u32>,
+  pub mate: Option<u32>,
+  pub movetime: Option<u32>,
+  pub infinite: bool,
+  pub ponder: bool
 }
 
 impl Constraints {
     pub fn new() -> Self {
       Constraints {
-        time: Some(UCITimer::new()),
+        time: Some(TimerKeeper::new()),
         depth: None,
         nodes: None,
         mate: None,
@@ -90,7 +90,7 @@ impl Parsers {
     pub fn parse_time(time_args: &[&str]) -> Constraints{
       let mut token_id = 0;
       let mut constraints = Constraints::new();
-      let mut time = UCITimer::new();
+      let mut time = TimerKeeper::new();
       while let Some(t) = time_args.get(token_id) {
         match *t {
           "infinite" => {

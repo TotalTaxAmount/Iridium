@@ -49,9 +49,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
           },
           "go" => {
             constraints = Parsers::parse_time(&args);
-            println!("{:?}", constraints);
           },
-          "stop" => {},
+          "stop" => {
+            
+          },
           "ponder" => {},
           "ponderhint" => {},
           "quit" => exit(0),
@@ -60,10 +61,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   }
 }
 
+
 #[cfg(test)]
 mod tests {
   use engine::engine::Engine;
-use movegen::movegen::MoveGen;
+  use fen::parsers::TimerKeeper;
+  use movegen::movegen::MoveGen;
 
   use super::*;
 
@@ -83,5 +86,21 @@ use movegen::movegen::MoveGen;
     let result = MoveGen::gen_moves(Parsers::from_fen(&test_fen).unwrap(), lib::Sides::WHITE);
     assert_eq!(result, vec![]);
   }
-}
 
+  #[test]
+  fn test_time() {
+    let command: Vec<&str> = "go wtime 300000 btime 300000 winc 0 binc 0".split(" ").collect();
+
+    let res = Parsers::parse_time(&command[0..]);
+    
+    assert_eq!(res, Constraints { 
+        time: Some(TimerKeeper { time_msec: [300000, 300000], inc_msec: [0, 0], mtg: 0 }), 
+        depth: None, 
+        nodes: None, 
+        mate: None, 
+        movetime: None, 
+        infinite: false, 
+        ponder: false 
+      });
+  }
+}
