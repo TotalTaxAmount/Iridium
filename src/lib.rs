@@ -40,7 +40,7 @@ pub fn pos_to_alph(pos: u32) -> Result<String, Error> {
 
 }
 
-pub fn alph_to_pos(alph: &str) -> Result<u32, Error> {
+pub fn alph_to_pos(alph: &str) -> Result<u8, Error> {
   let (f, r) = alph.split_at(1);
   let rank = match r.parse::<u8>() {
     Ok(r) => r - 1,
@@ -65,5 +65,5 @@ pub fn alph_to_pos(alph: &str) -> Result<u32, Error> {
     }
   };
 
-  Ok(u32::from(rank + file * 8))
+  Ok(u8::from(rank + file * 8))
 }

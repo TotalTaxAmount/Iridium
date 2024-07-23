@@ -141,10 +141,10 @@ impl Default for Board {
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Move {
-  start: u8,
-  dest: u8,
-  piece: Pieces,
-  capture: Option<Pieces>,
+  pub start: u8,
+  pub dest: u8,
+  pub piece: Pieces,
+  pub capture: Option<Pieces>,
 }
 
 fn print_bitboard(bitboard: BitBoard) {

@@ -16,6 +16,7 @@ fn ucimode() {
 
   // Ready
   println!("uciok");
+
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
