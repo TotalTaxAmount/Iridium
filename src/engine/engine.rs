@@ -1,6 +1,6 @@
-use Iridium::Board;
+use crate::structs::{Board, Move};
 
-use crate::movegen::structs::Move;
+
 
 pub struct Engine;
 impl Engine {

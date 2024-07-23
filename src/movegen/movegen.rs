@@ -1,8 +1,5 @@
-use Iridium::{BitBoard, Board};
+use crate::structs::{BitBoard, Board, Move, Pieces, Sides};
 
-use crate::lib::{Pieces, Sides};
-
-use super::structs::Move;
 
 pub struct MoveGen;
 impl MoveGen {

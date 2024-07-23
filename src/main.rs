@@ -1,9 +1,10 @@
-use std::{env::Args, process::exit};
-use fen::parsers::{Constraints, Parsers};
-use Iridium::Board;
+use std::process::exit;
+use parsers::{fen::{Fen}, time::{Constraints, Time}};
+use structs::Board;
 
 mod lib;
-mod fen;
+mod structs;
+mod parsers;
 mod engine;
 mod movegen;
 
@@ -42,13 +43,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
               continue;
             }
 
-            match Parsers::from_fen(&&args[1..7]) {
+            match Fen::from_fen(&&args[1..7]) {
                 Ok(b) => { board = b },
                 Err(e) => {println!("{}", e)}
             } 
           },
           "go" => {
-            constraints = Parsers::parse_time(&args);
+            constraints = Time::parse_time(&args);
           },
           "stop" => {
             
@@ -65,8 +66,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod tests {
   use engine::engine::Engine;
-  use fen::parsers::TimerKeeper;
+  use lib::{alph_to_pos, pos_to_alph};
+  use parsers::{fen::Fen, time::TimerKeeper};
   use movegen::movegen::MoveGen;
+use structs::Sides;
 
   use super::*;
 
@@ -75,7 +78,7 @@ mod tests {
   fn test_eval() {
     let test_fen: Vec<&str> = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq e3 0 1".split(" ").collect();
     
-    let result = Engine::evaluate(Parsers::from_fen(&test_fen).unwrap());  
+    let result = Engine::evaluate(Fen::from_fen(&test_fen).unwrap());  
     assert_eq!(result, 0);
   }
 
@@ -83,7 +86,7 @@ mod tests {
   fn test_movegen() {
     let test_fen: Vec<&str> = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq e3 0 1".split(" ").collect();
 
-    let result = MoveGen::gen_moves(Parsers::from_fen(&test_fen).unwrap(), lib::Sides::WHITE);
+    let result = MoveGen::gen_moves(Fen::from_fen(&test_fen).unwrap(), Sides::WHITE);
     assert_eq!(result, vec![]);
   }
 
@@ -91,7 +94,7 @@ mod tests {
   fn test_time() {
     let command: Vec<&str> = "go wtime 300000 btime 300000 winc 0 binc 0".split(" ").collect();
 
-    let res = Parsers::parse_time(&command[0..]);
+    let res = Time::parse_time(&command[0..]);
     
     assert_eq!(res, Constraints { 
         time: Some(TimerKeeper { time_msec: [300000, 300000], inc_msec: [0, 0], mtg: 0 }), 
@@ -102,5 +105,15 @@ mod tests {
         infinite: false, 
         ponder: false 
       });
+  }
+
+  #[test]
+  fn test_alph_to_pos() {
+    assert_eq!(alph_to_pos("e5"), Ok(36))
+  }
+
+  #[test]
+  fn test_pos_to_alph() {
+    assert_eq!(pos_to_alph(36), Ok("e5".to_string()))
   }
 }
