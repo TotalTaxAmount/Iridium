@@ -1,5 +1,5 @@
 use std::process::exit;
-use parsers::{fen::{Fen}, time::{Constraints, Time}};
+use parsers::{fen::Fen, position::Position, time::{Constraints, Time}};
 use structs::Board;
 
 mod lib;
@@ -34,20 +34,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
           "register" => {},
           "ucinewgame" => {},
           "position" => {
-            if args.len() < 2 {
-              println!("Invalid arguments");
-              continue;
+            match Position::parse_position(&args) {
+              Ok(b) => board = b,
+              Err(e) => {
+                println!("{}", e);
+                continue;
+              }
             }
-
-            if args[1] == "startpos" {
-              board = Board::default();
-              continue;
-            }
-
-            match Fen::from_fen(&&args[1..7]) {
-                Ok(b) => { board = b },
-                Err(e) => {println!("{}", e)}
-            } 
           },
           "go" => {
             constraints = Time::parse_time(&args);
@@ -70,7 +63,7 @@ mod tests {
   use lib::{alph_to_pos, pos_to_alph};
   use parsers::{fen::Fen, time::TimerKeeper};
   use movegen::movegen::MoveGen;
-use structs::Sides;
+  use structs::{print_bitboard, BitBoard, Sides};
 
   use super::*;
 

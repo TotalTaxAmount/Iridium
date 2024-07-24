@@ -65,5 +65,5 @@ pub fn alph_to_pos(alph: &str) -> Result<u8, Error> {
     }
   };
 
-  Ok(u8::from(rank + file * 8))
+  Ok(u8::from(file + rank * 8))
 }
