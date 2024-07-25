@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, default, fmt::Display, ops::{BitAnd, BitOr, BitXor}};
+use std::{borrow::BorrowMut, default, fmt::Display, ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr}};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[repr(usize)]
@@ -14,6 +14,18 @@ impl Sides {
           1 => Some(Self::BLACK),
           _ => None
       }
+    }
+}
+
+impl Not for Sides {
+    type Output = Sides;
+
+    fn not(self) -> Self::Output {
+        if self == Self::WHITE {
+          Self::BLACK
+        } else {
+          Self::WHITE
+        }
     }
 }
 
@@ -88,7 +100,31 @@ impl BitXor for BitBoard {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+impl Not for BitBoard {
+    type Output = BitBoard;
+
+    fn not(self) -> Self::Output {
+        Self(!self.0)
+    }
+}
+
+impl Shl for BitBoard {
+    type Output = BitBoard;
+
+    fn shl(self, rhs: BitBoard) -> Self::Output {
+        Self(self.0 << rhs.0)
+    }
+}
+
+impl Shr for BitBoard {
+    type Output = BitBoard;
+
+    fn shr(self, rhs: Self) -> Self::Output {
+        Self(self.0 >> rhs.0)
+    }
+}
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Board {
   // pub bb_sides: [BitBoard; 2],
 
@@ -108,7 +144,7 @@ pub struct Board {
 
   pub half_moves: u64,
 
-  pub full_moves: u64,
+  pub full_moves: usize,
 
   pub score: u64,
 }

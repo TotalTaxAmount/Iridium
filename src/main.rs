@@ -2,7 +2,7 @@ use std::process::exit;
 use engine::engine::Engine;
 use movegen::movegen::MoveGen;
 use parsers::{position::Position, time::{Constraints, Time}};
-use structs::{Board, Sides};
+use structs::{Board, Move, Sides};
 use Iridium::pos_to_alph;
 
 mod lib;
@@ -47,11 +47,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
           },
           "go" => {
             constraints = Time::parse_time(&args);
-            let move_gen: MoveGen = MoveGen {
-              board: board.clone(),
-              side: Sides::WHITE
-            };
-            let best_move = Engine::pick_move(move_gen.gen_moves());
+            let best_move = Engine::pick_move(MoveGen::gen_moves(board, board.turn));
+            println!("{:?} {}", board.turn, board.full_moves);
             println!("bestmove {}{}", pos_to_alph(best_move.start)?, pos_to_alph(best_move.dest)?);
           },
           "stop" => {
@@ -88,12 +85,8 @@ mod tests {
   #[test]
   fn test_movegen() {
     let test_fen: Vec<&str> = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq e3 0 1".split(" ").collect();
-    let movegen: MoveGen = MoveGen {
-      board: Fen::from_fen(&test_fen).unwrap(),
-      side: Sides::WHITE
-    };
 
-    let result = movegen.gen_moves();
+    let result = MoveGen::gen_moves(Fen::from_fen(&test_fen).unwrap(), Sides::BLACK);
     assert_eq!(result, vec![]);
   }
 

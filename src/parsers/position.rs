@@ -24,7 +24,7 @@ impl Position {
         },
         "moves" => {
           let mut moves: Vec<Move> = vec![];
-          for m in args[(token_id + 1)..].iter() {
+          for (move_count, m) in args[(token_id + 1)..].iter().enumerate() {
             let (start_str, end_str) = m.split_at(2);
             let start = match alph_to_pos(start_str) {
               Ok(s) => s,
@@ -63,6 +63,12 @@ impl Position {
               }
             }
             moves.push(bmove);
+            board.full_moves = move_count + 1;
+            if move_count + 1 % 2 == 0 {
+              board.turn = Sides::WHITE;
+            } else {
+              board.turn = Sides::BLACK;
+            }
           }
           board.apply_moves(moves);
         },

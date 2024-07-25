@@ -134,7 +134,7 @@ impl Fen {
     ))
   }
 
-  fn parse_fullmoves(part: &str) -> Result<u64, FenError> {
+  fn parse_fullmoves(part: &str) -> Result<usize, FenError> {
     match part.parse() {
         Ok(n) => Ok(n),
         Err(_) => Err(FenError),
