@@ -1,8 +1,6 @@
-use std::ascii::escape_default;
 use std::fmt::Error;
-use std::mem::MaybeUninit;
 
-use crate::structs::{print_bitboard, BitBoard, Board, Move, Pieces, Sides};
+use crate::structs::{BitBoard, Board, Move, Pieces, Sides};
 
 use crate::lib::alph_to_pos;
 
@@ -48,17 +46,12 @@ impl Position {
             let mut move_side: Option<Sides> = None;
 
             for (side, sides) in board.bb_pieces.into_iter().enumerate() {
-              for (piece, pieces) in sides.into_iter().enumerate() {
+              for pieces in sides.into_iter() {
                 if pieces & BitBoard::from_pos(start) != BitBoard(0) {
                   move_side = Sides::from_usize(side);
                   bmove.start = start;
                   bmove.dest = dest;
-                  // bmove.piece = match Pieces::from_usize(piece) {
-                  //   Some(p) => p,
-                  //   None => return Err(Error)
-                  // };
                 }
-                // println!("{:?} {:?}", move_side, Sides::from_usize(side));
 
                 if Sides::from_usize(side) != move_side && Sides::from_usize(side) != None && move_side != None {
                   for (piece, pieces) in board.bb_pieces[side].into_iter().enumerate() {

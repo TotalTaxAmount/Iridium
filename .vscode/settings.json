@@ -1,7 +1,10 @@
 {
   "cSpell.words": [
     "alph",
+    "binc",
     "bitboard",
+    "bmove",
+    "btime",
     "fullmoves",
     "halfmoves",
     "isready",
@@ -14,6 +17,8 @@
     "startpos",
     "ucimode",
     "ucinewgame",
-    "uciok"
+    "uciok",
+    "winc",
+    "wtime"
   ]
 }

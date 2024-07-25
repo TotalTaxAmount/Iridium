@@ -14,14 +14,14 @@ pub fn get_input(prompt: &str) -> String {
   return input.trim().to_string();
 }
 
-pub fn pos_to_alph(pos: u32) -> Result<String, Error> {
+pub fn pos_to_alph(pos: u8) -> Result<String, Error> {
   if pos > 63 {
     println!("{} is out of range", pos);
     return Err(Error);
   }
   
-  let rank = (pos % 8) + 1;
-  let file = match pos / 8 {
+  let rank = pos / 8 + 1;
+  let file = match pos % 8 {
       0 => "a",
       1 => "b",
       2 => "c",

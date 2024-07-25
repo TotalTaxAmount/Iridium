@@ -210,7 +210,6 @@ impl Board {
 pub struct Move {
   pub start: u8,
   pub dest: u8,
-  // pub piece: Pieces,
   pub capture: Option<Pieces>,
 }
 
