@@ -1,4 +1,4 @@
-use std::{default, fmt::Display, ops::{BitAnd, BitOr}};
+use std::{borrow::BorrowMut, default, fmt::Display, ops::{BitAnd, BitOr, BitXor}};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[repr(usize)]
@@ -8,7 +8,7 @@ pub enum Sides {
 }
 
 impl Sides {
-    pub fn from_usize(i: usize) -> Option<Sides>{
+    pub fn from_usize(i: usize) -> Option<Self>{
       match i {
           0 => Some(Self::WHITE),
           1 => Some(Self::BLACK),
@@ -29,7 +29,7 @@ pub enum Pieces {
 }
 
 impl Pieces {
-  pub fn from_char(c: char) -> Option<(Sides, Pieces)> {
+  pub fn from_char(c: char) -> Option<(Sides, Self)> {
     let piece = match c {
       'p' | 'P' => Self::PAWN,
       'b' | 'B' => Self::BISHOP,
@@ -43,7 +43,7 @@ impl Pieces {
     Some((if c.is_uppercase() { Sides::WHITE } else { Sides::BLACK }, piece))
   }
 
-  pub fn from_usize(i: usize) -> Option<Pieces> {
+  pub fn from_usize(i: usize) -> Option<Self> {
     match i {
       0 => Some(Self::PAWN),
       1 => Some(Self::BISHOP),
@@ -78,6 +78,14 @@ impl BitOr for BitBoard {
   fn bitor(self, rhs: Self) -> Self::Output {
     Self(self.0 | rhs.0)
   }
+}
+
+impl BitXor for BitBoard {
+    type Output = BitBoard;
+
+    fn bitxor(self, rhs: Self) -> Self::Output {
+      Self(self.0 ^ rhs.0)
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -159,12 +167,50 @@ impl Default for Board {
   }
 }
 
+impl Board {
+  pub fn apply_move(&mut self, m: Move) {
+    //  let op_bb: BitBoard = if BitBoard::from_pos(m.start) & self.get_sides()[0] == BitBoard(0) { self.get_sides()[0] } else { self.get_sides()[1] };
+    let side: Sides = if BitBoard::from_pos(m.start) & self.get_sides()[0] != BitBoard(0) { Sides::WHITE } else { Sides::BLACK };
+    let mut piece: usize = 0;
+    for (p, ps) in self.bb_pieces[side as usize].into_iter().enumerate() {
+      if ps & BitBoard::from_pos(m.start) != BitBoard(0) {
+        piece = p;
+        break;
+      }
+    };
+
+    
+    self.bb_pieces[side as usize][piece] = self.bb_pieces[side as usize][piece] ^ BitBoard::from_pos(m.start);
+    self.bb_pieces[side as usize][piece] = self.bb_pieces[side as usize][piece] | BitBoard::from_pos(m.dest);
+
+    if m.capture != None {
+      let op_side = if side == Sides::WHITE { Sides::BLACK } else { Sides::WHITE };
+      self.bb_pieces[op_side as usize][m.capture.unwrap() as usize] = self.bb_pieces[op_side as usize][m.capture.unwrap() as usize] ^ BitBoard::from_pos(m.dest);
+    }
+  }
+
+  pub fn apply_moves(&mut self, moves: Vec<Move>) {
+    for m in moves {
+      self.apply_move(m);
+    }
+  }
+
+  pub fn get_sides(&self) -> [BitBoard; 2] {
+    let mut bb_sides: [BitBoard; 2] = [BitBoard(0); 2];
+    for (s, pieces) in self.bb_pieces.into_iter().enumerate() {
+      for p in pieces.into_iter() {
+        bb_sides[s] = bb_sides[s] | p;
+      }
+    }
+    bb_sides
+  }
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub struct Move {
   pub start: u8,
   pub dest: u8,
-  pub piece: Pieces,
+  // pub piece: Pieces,
   pub capture: Option<Pieces>,
 }
 

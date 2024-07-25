@@ -1,5 +1,5 @@
 use std::process::exit;
-use parsers::{fen::Fen, position::Position, time::{Constraints, Time}};
+use parsers::{position::Position, time::{Constraints, Time}};
 use structs::Board;
 
 mod lib;
@@ -63,7 +63,7 @@ mod tests {
   use lib::{alph_to_pos, pos_to_alph};
   use parsers::{fen::Fen, time::TimerKeeper};
   use movegen::movegen::MoveGen;
-  use structs::{print_bitboard, BitBoard, Sides};
+  use structs::{print_bitboard, BitBoard, Move, Pieces, Sides};
 
   use super::*;
 
@@ -110,4 +110,16 @@ mod tests {
   fn test_pos_to_alph() {
     assert_eq!(pos_to_alph(36), Ok("e5".to_string()))
   }
+
+  // #[test]
+  // fn test_apply_move() {
+  //   let mut tboard: Board = Board::default();
+
+  //   print_bitboard(tboard.bb_pieces[0][Pieces::KNIGHT as usize]);
+
+  //   println!();
+  //   tboard.apply_move(Move { start: 1, dest: 18, capture: None });
+
+  //   print_bitboard(tboard.bb_pieces[0][Pieces::KNIGHT as usize]);
+  // }
 }
