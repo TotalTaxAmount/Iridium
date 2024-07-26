@@ -11,9 +11,9 @@ impl Position {
   pub fn parse_position(args: &[&str]) -> Result<Board, Error> {
     let mut board: Board = Board::default();
     let mut token_id = 0;
-    while let Some(t) =  args.get(token_id) {
+    while let Some(t) = args.get(token_id) {
       match *t {
-        "startpos" => {},
+        "startpos" => {}
         "fen" => {
           if let Ok(b) = Fen::from_fen(&args[(token_id + 1)..(token_id + 6)]) {
             board = b;
@@ -21,7 +21,7 @@ impl Position {
             println!("Error parsing fen");
             return Err(Error);
           }
-        },
+        }
         "moves" => {
           for (move_count, m) in args[(token_id + 1)..].iter().enumerate() {
             let (start_str, end_str) = m.split_at(2);
@@ -38,7 +38,7 @@ impl Position {
               Err(e) => {
                 println!("{}", e);
                 return Err(Error);
-              } 
+              }
             };
 
             let mut bmove: Move = Default::default();
@@ -52,11 +52,14 @@ impl Position {
                   bmove.dest = dest;
                 }
 
-                if Sides::from_usize(side) != move_side && Sides::from_usize(side) != None && move_side != None {
+                if Sides::from_usize(side) != move_side
+                  && Sides::from_usize(side) != None
+                  && move_side != None
+                {
                   for (piece, pieces) in board.bb_pieces[side].into_iter().enumerate() {
                     if pieces & BitBoard::from_pos(dest) != BitBoard(0) {
                       bmove.capture = Pieces::from_usize(piece);
-                    } 
+                    }
                   }
                 }
               }
@@ -72,12 +75,12 @@ impl Position {
           // println!("{:#?}", moves);
           // board.apply_moves(moves);
           // print_bitboard(board.bb_pieces[Sides::BLACK as usize][Pieces::PAWN as usize]);
-        },
-        _ => {}  
+        }
+        _ => {}
       }
       token_id += 1;
     }
-  
+
     Ok(board)
   }
 }

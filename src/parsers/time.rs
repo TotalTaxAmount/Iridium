@@ -1,6 +1,5 @@
 use core::fmt;
 
-
 #[derive(PartialEq, Debug)]
 pub struct TimerKeeper {
   pub time_msec: [i32; 2],
@@ -18,20 +17,16 @@ impl TimerKeeper {
   }
 
   fn blank(&self) -> bool {
-    self.time_msec != [0; 2] &&
-    self.inc_msec != [0; 2] &&
-    self.mtg != 0
+    self.time_msec != [0; 2] && self.inc_msec != [0; 2] && self.mtg != 0
   }
 }
 
 impl fmt::Display for TimerKeeper {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    writeln!(f, "time: [ w: {}ms b: {}ms ] inc: [ w: {}ms b: {}ms ] moves to go: {}", 
-    &self.time_msec[0],
-    &self.time_msec[1],
-    &self.inc_msec[0],
-    &self.inc_msec[1],
-    &self.mtg
+    writeln!(
+      f,
+      "time: [ w: {}ms b: {}ms ] inc: [ w: {}ms b: {}ms ] moves to go: {}",
+      &self.time_msec[0], &self.time_msec[1], &self.inc_msec[0], &self.inc_msec[1], &self.mtg
     )
   }
 }
@@ -39,12 +34,12 @@ impl fmt::Display for TimerKeeper {
 #[derive(PartialEq, Debug)]
 pub struct Constraints {
   pub time: Option<TimerKeeper>,
-  pub depth: Option<u32>, 
+  pub depth: Option<u32>,
   pub nodes: Option<u32>,
   pub mate: Option<u32>,
   pub movetime: Option<u32>,
   pub infinite: bool,
-  pub ponder: bool
+  pub ponder: bool,
 }
 
 impl Constraints {
@@ -56,14 +51,14 @@ impl Constraints {
       mate: None,
       movetime: None,
       infinite: false,
-      ponder: false
+      ponder: false,
     }
   }
 }
 
 pub struct Time;
 impl Time {
-  pub fn parse_time(time_args: &[&str]) -> Constraints{
+  pub fn parse_time(time_args: &[&str]) -> Constraints {
     let mut token_id = 0;
     let mut constraints = Constraints::new();
     let mut time = TimerKeeper::new();
@@ -71,11 +66,11 @@ impl Time {
       match *t {
         "infinite" => {
           constraints.infinite = true;
-        },
+        }
 
         "ponder" => {
           constraints.ponder = true;
-        },
+        }
 
         "wtime" => {
           if let Some(wtime) = time_args.get(token_id + 1) {
@@ -84,7 +79,7 @@ impl Time {
             }
             token_id += 1;
           }
-        },
+        }
 
         "btime" => {
           if let Some(btime) = time_args.get(token_id + 1) {
@@ -93,7 +88,7 @@ impl Time {
             }
             token_id += 1;
           }
-        },
+        }
 
         "winc" => {
           if let Some(winc) = time_args.get(token_id + 1) {
@@ -102,7 +97,7 @@ impl Time {
             }
             token_id += 1;
           }
-        },
+        }
 
         "binc" => {
           if let Some(binc) = time_args.get(token_id + 1) {
@@ -111,7 +106,7 @@ impl Time {
             }
             token_id += 1;
           }
-        },
+        }
 
         "movestogo" => {
           if let Some(mtg) = time_args.get(token_id + 1) {
@@ -120,7 +115,7 @@ impl Time {
             }
             token_id += 1;
           }
-        },
+        }
 
         "depth" => {
           if let Some(depth) = time_args.get(token_id + 1) {
@@ -129,7 +124,7 @@ impl Time {
             }
             token_id += 1;
           }
-        },
+        }
 
         "nodes" => {
           if let Some(nodes) = time_args.get(token_id + 1) {
@@ -139,7 +134,7 @@ impl Time {
 
             token_id += 1;
           }
-        },
+        }
 
         "mate" => {
           if let Some(mate) = time_args.get(token_id + 1) {
@@ -149,7 +144,7 @@ impl Time {
 
             token_id += 1;
           }
-        },
+        }
 
         "movetime" => {
           if let Some(movetime) = time_args.get(3) {
@@ -159,8 +154,8 @@ impl Time {
             token_id += 1;
           }
         }
-        
-        _ => {},
+
+        _ => {}
       }
       token_id += 1;
     }

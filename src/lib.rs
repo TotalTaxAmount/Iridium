@@ -7,7 +7,7 @@ pub fn get_input(prompt: &str) -> String {
   println!("{}", prompt);
   let mut input = String::new();
   match io::stdin().read_line(&mut input) {
-    Ok(_) => {},
+    Ok(_) => {}
     Err(_) => {}
   }
 
@@ -19,25 +19,24 @@ pub fn pos_to_alph(pos: u8) -> Result<String, Error> {
     println!("{} is out of range", pos);
     return Err(Error);
   }
-  
+
   let rank = pos / 8 + 1;
   let file = match pos % 8 {
-      0 => "a",
-      1 => "b",
-      2 => "c",
-      3 => "d",
-      4 => "e",
-      5 => "f",
-      6 => "g",
-      7 => "h",
-      _ => {
-        println!("{} is out of bounds!", pos);
-        return Err(Error);
-      }
+    0 => "a",
+    1 => "b",
+    2 => "c",
+    3 => "d",
+    4 => "e",
+    5 => "f",
+    6 => "g",
+    7 => "h",
+    _ => {
+      println!("{} is out of bounds!", pos);
+      return Err(Error);
+    }
   };
 
-  Ok(format!("{}{}",file, rank))
-
+  Ok(format!("{}{}", file, rank))
 }
 
 pub fn alph_to_pos(alph: &str) -> Result<u8, Error> {
@@ -47,7 +46,7 @@ pub fn alph_to_pos(alph: &str) -> Result<u8, Error> {
     Err(_) => {
       println!("Failed to convert to pos");
       return Err(Error);
-    },
+    }
   };
 
   let file = match f {
@@ -60,7 +59,7 @@ pub fn alph_to_pos(alph: &str) -> Result<u8, Error> {
     "g" => 6,
     "h" => 7,
     _ => {
-      println!("{} is not a valid file!", f); 
+      println!("{} is not a valid file!", f);
       return Err(Error);
     }
   };
