@@ -1,3 +1,5 @@
+use rand::{seq::IteratorRandom, thread_rng};
+
 use crate::structs::{Board, Move};
 
 pub struct Engine;
@@ -6,7 +8,7 @@ impl Engine {
     0
   }
 
-  pub fn pick_move(moves: Vec<Move>) -> Move {
-    moves[0]
+  pub fn pick_move(moves: Vec<Move>) -> Option<Move> {
+    moves.into_iter().choose(&mut thread_rng())
   }
 }

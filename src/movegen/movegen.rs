@@ -39,23 +39,60 @@ impl MoveGen {
   }
 
   pub fn pawn_moves(board: Board, side: Sides) -> Vec<Move> {
+    const ROW: i8 = 8;
+
     let mut moves: Vec<Move> = vec![];
-    let non_cap_squares = !(board.get_sides()[side as usize] | board.get_sides()[!side as usize]);
+    let pawns = board.bb_pieces[side as usize][Pieces::PAWN as usize];
+    let empty_squares = !(board.get_sides()[0] | board.get_sides()[1]);
+
+    let direction = if side == Sides::WHITE { ROW } else { -ROW };
+
 
     for s in 0..63 {
-      if side == Sides::WHITE {
-        if board.bb_pieces[side as usize][Pieces::PAWN as usize] << BitBoard(8) & non_cap_squares != BitBoard(0) && 
-          BitBoard::from_pos(s) & board.bb_pieces[side as usize][Pieces::PAWN as usize] != BitBoard(0) {
-            moves.push(Move { start: s, dest: s + 8, capture: None });
-        }
+      let position_bb = BitBoard::from_pos(s);
+
+      let target_square = if (s as i8).overflowing_add(direction).1 { continue; } else { (s as i8).overflowing_add(direction).0 } as u8;
+      let double_square = if !(s as i8).overflowing_add(direction*2).1 && position_bb & Board::default().bb_pieces[side as usize][Pieces::PAWN as usize] != BitBoard(0) {
+        (s as i8).overflowing_add(direction * 2).0 
       } else {
-        print_bitboard(board.bb_pieces[side as usize][Pieces::PAWN as usize] >> BitBoard(8));
-        print_bitboard(non_cap_squares);
-        if board.bb_pieces[side as usize][Pieces::PAWN as usize] >> BitBoard(8) & non_cap_squares != BitBoard(0) && 
-          BitBoard::from_pos(s) & board.bb_pieces[side as usize][Pieces::PAWN as usize] != BitBoard(0) {
-            moves.push(Move { start: s, dest: s - 8, capture: None });
+        64
+      } as u8;
+
+      if target_square <= 63 {
+        let target_bb = BitBoard::from_pos(target_square);
+
+        if position_bb & pawns != BitBoard(0) && target_bb & empty_squares != BitBoard(0) {
+          moves.push(Move {
+            start: s,
+            dest: target_square,
+            capture: None,
+          });
+
+          if double_square <= 63 {
+            let target_bb = BitBoard::from_pos(double_square);
+    
+            if position_bb & pawns != BitBoard(0) && target_bb & empty_squares != BitBoard(0) {
+              moves.push(Move {
+                start: s,
+                dest: double_square,
+                capture: None,
+              })
+            }
+          }
         }
       }
+
+      // if side == Sides::WHITE {
+      //   if board.bb_pieces[side as usize][Pieces::PAWN as usize] << BitBoard(8) & empty_squares & BitBoard::from_pos(s + 8) != BitBoard(0) && 
+      //     BitBoard::from_pos(s) & board.bb_pieces[side as usize][Pieces::PAWN as usize] != BitBoard(0) {
+      //       moves.push(Move { start: s, dest: s + 8, capture: None });
+      //   }
+      // } else {
+      //   if board.bb_pieces[side as usize][Pieces::PAWN as usize] >> BitBoard(8) & empty_squares & BitBoard::from_pos(if s.overflowing_sub(8).1 {0} else {s - 8}) != BitBoard(0) && 
+      //     BitBoard::from_pos(s) & board.bb_pieces[side as usize][Pieces::PAWN as usize] != BitBoard(0) {
+      //       moves.push(Move { start: s, dest: s - 8, capture: None });
+      //   }
+      // }
     }
     moves
   }

@@ -47,7 +47,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
           },
           "go" => {
             constraints = Time::parse_time(&args);
-            let best_move = Engine::pick_move(MoveGen::gen_moves(board, board.turn));
+            let best_move = match Engine::pick_move(MoveGen::gen_moves(board, board.turn)) {
+              Some(m) => m,
+              None => continue,
+            };
             println!("{:?} {}", board.turn, board.full_moves);
             println!("bestmove {}{}", pos_to_alph(best_move.start)?, pos_to_alph(best_move.dest)?);
           },
