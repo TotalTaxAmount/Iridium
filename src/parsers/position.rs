@@ -1,6 +1,6 @@
 use std::fmt::Error;
 
-use crate::structs::{BitBoard, Board, Move, Pieces, Sides};
+use crate::structs::{print_bitboard, BitBoard, Board, Move, Pieces, Sides};
 
 use crate::lib::alph_to_pos;
 
@@ -23,7 +23,6 @@ impl Position {
           }
         },
         "moves" => {
-          let mut moves: Vec<Move> = vec![];
           for (move_count, m) in args[(token_id + 1)..].iter().enumerate() {
             let (start_str, end_str) = m.split_at(2);
             let start = match alph_to_pos(start_str) {
@@ -62,15 +61,17 @@ impl Position {
                 }
               }
             }
-            moves.push(bmove);
+            board.apply_move(bmove);
             board.full_moves = move_count + 1;
-            if move_count + 1 % 2 == 0 {
+            if (move_count + 1) % 2 == 0 {
               board.turn = Sides::WHITE;
             } else {
               board.turn = Sides::BLACK;
             }
           }
-          board.apply_moves(moves);
+          // println!("{:#?}", moves);
+          // board.apply_moves(moves);
+          // print_bitboard(board.bb_pieces[Sides::BLACK as usize][Pieces::PAWN as usize]);
         },
         _ => {}  
       }

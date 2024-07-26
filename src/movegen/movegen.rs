@@ -45,13 +45,15 @@ impl MoveGen {
     for s in 0..63 {
       if side == Sides::WHITE {
         if board.bb_pieces[side as usize][Pieces::PAWN as usize] << BitBoard(8) & non_cap_squares != BitBoard(0) && 
-        BitBoard::from_pos(s) & board.bb_pieces[side as usize][Pieces::PAWN as usize] != BitBoard(0) {
-          moves.push(Move { start: s, dest: s + 8, capture: None });
+          BitBoard::from_pos(s) & board.bb_pieces[side as usize][Pieces::PAWN as usize] != BitBoard(0) {
+            moves.push(Move { start: s, dest: s + 8, capture: None });
         }
       } else {
+        print_bitboard(board.bb_pieces[side as usize][Pieces::PAWN as usize] >> BitBoard(8));
+        print_bitboard(non_cap_squares);
         if board.bb_pieces[side as usize][Pieces::PAWN as usize] >> BitBoard(8) & non_cap_squares != BitBoard(0) && 
-        BitBoard::from_pos(s) & board.bb_pieces[side as usize][Pieces::PAWN as usize] != BitBoard(0) {
-          moves.push(Move { start: s, dest: s - 8, capture: None });
+          BitBoard::from_pos(s) & board.bb_pieces[side as usize][Pieces::PAWN as usize] != BitBoard(0) {
+            moves.push(Move { start: s, dest: s - 8, capture: None });
         }
       }
     }

@@ -1,7 +1,5 @@
 use crate::structs::{Board, Move};
 
-
-
 pub struct Engine;
 impl Engine {
   pub fn evaluate(board: Board) -> u8 {
