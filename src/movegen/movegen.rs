@@ -14,8 +14,8 @@ impl MoveGen {
       }
       for (piece, bb) in position.into_iter().enumerate() {
         match Pieces::from_usize(piece) {
-          Some(Pieces::PAWN) => moves.append(&mut Self::pawn_moves(board, side)),
-          Some(Pieces::BISHOP) => moves.append(&mut Self::bishop_moves(board, side)),
+          Some(Pieces::PAWN) => moves.append(&mut Self::pawn_moves(bb, board, side)),
+          Some(Pieces::BISHOP) => moves.append(&mut Self::bishop_moves(bb, board, side)),
           Some(Pieces::KNIGHT) => moves.append(&mut Self::knight_moves(bb)),
           Some(Pieces::ROOK) => moves.append(&mut Self::rock_moves(bb)),
           Some(Pieces::QUEEN) => moves.append(&mut Self::queen_moves(bb)),
@@ -37,13 +37,11 @@ impl MoveGen {
         }
       }
     }
-
     moves
   }
 
-  pub fn pawn_moves(board: Board, side: Sides) -> Vec<Move> {
+  pub fn pawn_moves(pawns: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
-    let pawns = board.bb_pieces[side as usize][Pieces::PAWN as usize];
     let empty_squares: BitBoard = !(board.get_sides()[0] | board.get_sides()[1]);
 
     let direction = if side == Sides::WHITE {
@@ -92,6 +90,7 @@ impl MoveGen {
               start: s,
               dest: target_square,
               capture: None,
+              mtype: "Single Pawn move".to_string(),
             });
 
             if double_square <= 63 {
@@ -103,6 +102,7 @@ impl MoveGen {
                   start: s,
                   dest: double_square,
                   capture: None,
+                  mtype: "Double Pawn Move".to_string()
                 });
               }
             }
@@ -126,6 +126,7 @@ impl MoveGen {
               start: s,
               dest: capture_squares.0,
               capture,
+              mtype: "Pawn Capture -1".to_string(),
             })
           }
         }
@@ -143,20 +144,21 @@ impl MoveGen {
 
             moves.push(Move {
               start: s,
-              dest: capture_squares.0,
+              dest: capture_squares.1,
               capture,
+              mtype: "Pawn Capture +1".to_string()
             })
           }
         }
       }
     }
+    println!("Pawn Moves: {:#?}", moves);
     moves
   }
 
   // Possible for this to use rays in future
-  pub fn bishop_moves(board: Board, side: Sides) -> Vec<Move> {
+  pub fn bishop_moves(bishops: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
-    let bishops = board.bb_pieces[side as usize][Pieces::BISHOP as usize];
     let empty_squares = !(board.get_sides()[0] | board.get_sides()[1]);
 
     for s in 0..63 {
@@ -165,79 +167,73 @@ impl MoveGen {
       if position_bb & bishops != BitBoard(0) {
         let edge_dists: (u8, u8) = (
           //RIGHT, LEFT Shouldn't need top and bottom
-          8 - (s % 8) - 1,
-          8 - (8 - (s % 8)),
+          8 - (s % 8),
+          8 - (8 - (s % 8)) + 1,
         );
 
-        for i in 0..edge_dists.0 {
+
+        // NE
+        for i in 1..(edge_dists.0) {
           let dest = s + 9 * i;
-          if BitBoard::from_pos(dest) & empty_squares != BitBoard(0) {
+          if dest > 63 || BitBoard::from_pos(dest) & empty_squares == BitBoard(0) {
             break;
           }
 
-          if s != dest {
-            moves.push(Move {
-              start: s,
-              dest,
-              capture: None,
-            })
-          }
+          moves.push(Move {
+            start: s,
+            dest,
+            capture: None,
+            mtype: "Bishop NE".to_string()
+          })
         }
 
-        for i in 0..edge_dists.0 {
+        // NW
+        for i in 1..edge_dists.1 {
           let dest = s + 7 * i;
-          if BitBoard::from_pos(dest) & empty_squares != BitBoard(0) {
+
+          if dest > 63 || BitBoard::from_pos(dest) & empty_squares == BitBoard(0) {
             break;
           }
+          
 
-          if s != dest {
-            moves.push(Move {
-              start: s,
-              dest: s + 7 * i,
-              capture: None,
-            })
-          }
+          moves.push(Move {
+            start: s,
+            dest: s + 7 * i,
+            capture: None,
+            mtype: "Bishop NW".to_string()
+          })
         }
 
-        for i in 0..edge_dists.0 {
-          if s.overflowing_sub(9 * i).1 {
-            break;
-          };
-          let dest = s - 9 * i;
-          if BitBoard::from_pos(dest) & empty_squares != BitBoard(0) {
+        // SW
+        for i in 1..edge_dists.1 {
+          if s.overflowing_sub(9 * i).1 || BitBoard::from_pos(s - 9 * i) & empty_squares == BitBoard(0) {
             break;
           }
-          if s != dest {
-            moves.push(Move {
-              start: s,
-              dest,
-              capture: None,
-            })
-          }
+          moves.push(Move {
+            start: s,
+            dest: s - 9 * i,
+            capture: None,
+            mtype: "Bishop SW".to_string()
+          })
         }
 
-        for i in 0..edge_dists.0 {
-          if s.overflowing_sub(7 * i).1 {
-            break;
-          };
-          let dest = s - 7 * i;
-          if BitBoard::from_pos(dest) & empty_squares != BitBoard(0) {
+        // SE
+        for i in 1..edge_dists.0 {
+          if s.overflowing_sub(7 * i).1 || BitBoard::from_pos(s - 7 * i) & empty_squares == BitBoard(0) {
             break;
           }
 
-          if s != dest {
-            moves.push(Move {
-              start: s,
-              dest,
-              capture: None,
-            })
-          }
+          moves.push(Move {
+            start: s,
+            dest: s - 7 * i,
+            capture: None,
+            mtype: "Bishop SE".to_string()
+          })
         }
       }
     }
 
-    println!("{:#?}", moves);
-
+    println!("Bishop Moves {:#?}", moves);
     moves
   }
 

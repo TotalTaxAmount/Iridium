@@ -270,11 +270,12 @@ impl Board {
   }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct Move {
   pub start: u8,
   pub dest: u8,
   pub capture: Option<Pieces>,
+  pub mtype: String,
 }
 
 pub fn print_bitboard(bitboard: BitBoard) {

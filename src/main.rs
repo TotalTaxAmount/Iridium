@@ -5,7 +5,7 @@ use parsers::{
   time::{Constraints, Time},
 };
 use std::process::exit;
-use structs::Board;
+use structs::{print_bitboard, Board};
 use Iridium::pos_to_alph;
 
 mod engine;
@@ -63,6 +63,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
       "stop" => {}
       "ponder" => {}
       "ponderhint" => {}
+      "pb" => {
+        println!();
+        print_bitboard(board.get_sides()[0] | board.get_sides()[1]);
+        println!();
+        print_bitboard(board.get_sides()[0]);
+        println!();
+        print_bitboard(board.get_sides()[1])
+      }
       "quit" => exit(0),
       _ => println!("Error unknown command: {}", command),
     }
