@@ -5,7 +5,7 @@ use parsers::{
   time::{Constraints, Time},
 };
 use std::process::exit;
-use structs::{Board, Move, Sides};
+use structs::Board;
 use Iridium::pos_to_alph;
 
 mod engine;

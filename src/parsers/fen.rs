@@ -29,7 +29,7 @@ impl Fen {
   pub fn from_fen(fen: &[&str]) -> Result<Board, FenError> {
     // let parts: Vec<_> = fen.split(" ").collect();
     if fen.len() < 6 {
-      println!("Invalid FEN");
+      println!("Invalid FEN length expected 6 got {}", fen.len());
       return Err(FenError);
     }
 

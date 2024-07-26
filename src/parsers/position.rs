@@ -15,7 +15,7 @@ impl Position {
       match *t {
         "startpos" => {}
         "fen" => {
-          if let Ok(b) = Fen::from_fen(&args[(token_id + 1)..(token_id + 6)]) {
+          if let Ok(b) = Fen::from_fen(&args[(token_id + 1)..(token_id + 7)]) {
             board = b;
           } else {
             println!("Error parsing fen");
