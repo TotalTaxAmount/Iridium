@@ -304,18 +304,40 @@ impl MoveGen {
           continue;
         }
 
+        // EDGE DISTS
+        // 0 = RIGHT
+        // 1 = LEFT
+        // 2 = TOP
+        // 3 = BOTTOM
+
+        // SHIFTS
+        // 6 = UP 2LEFT
+        // -6 = DOWN 2RIGHT
+        // 10 = UP 2RIGHT
+        // -10 = DOWN 2LEFT
+        // 15 = 2UP LEFT
+        // -15 = 2DOWN RIGHT
+        // 17 = 2UP RIGHT
+        // -17 = 2DOWN LEFT
+
+
         let is_valid_move = match shift {
-          6 | -6 => edge_dists.0 >= 2 && edge_dists.2 >= 1,
-          10 | -10 => edge_dists.0 >= 1 && edge_dists.2 >= 2,
-          15 | -15 => edge_dists.1 >= 2 && edge_dists.2 >= 1,
-          17 | -17 => edge_dists.1 >= 1 && edge_dists.2 >= 2,
+          6 => edge_dists.1 >= 2 && edge_dists.2 >= 1,
+          10 => edge_dists.0 >= 2 && edge_dists.2 >= 1,
+          15 => edge_dists.1 >= 1 && edge_dists.2 >= 2,
+          17 => edge_dists.0 >= 1 && edge_dists.2 >= 2,
+
+          -6 => edge_dists.0 >= 2 && edge_dists.3 >= 1,
+          -10 => edge_dists.1 >= 2 && edge_dists.3 >= 1,
+          -15 => edge_dists.0 >= 1 && edge_dists.3 >= 2,
+          -17 => edge_dists.1 >= 1 && edge_dists.3 >= 2,
           _ => false,
         };
 
-        println!("{} - {}", shift, dest);
-
 
         if is_valid_move {
+          println!("{:?} -> {:?}: shift: {}", pos_to_alph(s), pos_to_alph(dest.try_into().unwrap()), shift);
+
           let dest_bb = BitBoard::from_pos(dest.try_into().unwrap());
 
           if dest_bb & board.get_sides()[side as usize] == BitBoard(0) {
