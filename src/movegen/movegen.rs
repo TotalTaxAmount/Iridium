@@ -1,4 +1,4 @@
-use std::{fmt::DebugSet, vec};
+use std::{cmp::min, vec};
 
 use Iridium::pos_to_alph;
 
@@ -19,8 +19,8 @@ impl MoveGen {
           Some(Pieces::PAWN) => moves.append(&mut Self::pawn_moves(bb, board, side)),
           Some(Pieces::BISHOP) => moves.append(&mut Self::bishop_moves(bb, board, side)),
           Some(Pieces::KNIGHT) => moves.append(&mut Self::knight_moves(bb)),
-          Some(Pieces::ROOK) => moves.append(&mut Self::rock_moves(bb)),
-          Some(Pieces::QUEEN) => moves.append(&mut Self::queen_moves(bb)),
+          Some(Pieces::ROOK) => moves.append(&mut Self::rook_moves(bb, board, side)),
+          Some(Pieces::QUEEN) => moves.append(&mut Self::queen_moves(bb, board, side)),
           Some(Pieces::KING) => moves.append(&mut Self::king_moves(
             bb,
             if Sides::from_usize(s) == Some(Sides::WHITE) {
@@ -76,7 +76,7 @@ impl MoveGen {
         );
 
         let target_square = if (s as i8).overflowing_add(direction).1 {
-          64 /* This becomes invalid by by the if statement below */
+          64 /* This becomes invalid by the if statement below */
         } else {
           (s as i8).overflowing_add(direction).0
         } as u8;
@@ -170,22 +170,23 @@ impl MoveGen {
   // Possible for this to use rays in future
   pub fn bishop_moves(bishops: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
-    let empty_squares = !(board.get_sides()[0] | board.get_sides()[1]);
 
     for s in 0..63 {
       let position_bb = BitBoard::from_pos(s);
 
       if position_bb & bishops != BitBoard(0) {
-        let edge_dists: (u8, u8) = (
-          //RIGHT, LEFT Shouldn't need top and bottom
-          8 - (s % 8),
-          8 - (8 - (s % 8)) + 1,
-        );
+        let edge_dists: (u8, u8, u8, u8) = (
+          //RIGHT, LEFT, TOP, BOTTOM
+          8 - (s % 8) - 1,
+          8 - (8 - (s % 8)), 
+          8 - (s / 8) - 1,
+          (s / 8)
+         );
 
         // NE
-        for i in 1..(edge_dists.0) {
+        for i in 1..min(edge_dists.0, edge_dists.2) {
           let dest = s + 9 * i;
-          if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] == BitBoard(0) {
+          if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] != BitBoard(0) {
             break;
           }
 
@@ -203,10 +204,10 @@ impl MoveGen {
         }
 
         // NW
-        for i in 1..edge_dists.1 {
+        for i in 1..min(edge_dists.1, edge_dists.2){
           let dest = s + 7 * i;
 
-          if dest > 63 || BitBoard::from_pos(dest) & empty_squares == BitBoard(0) {
+          if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] != BitBoard(0) {
             break;
           }
 
@@ -223,9 +224,9 @@ impl MoveGen {
         }
 
         // SW
-        for i in 1..edge_dists.1 {
+        for i in 1..min(edge_dists.1, edge_dists.3) {
           if s.overflowing_sub(9 * i).1
-            || BitBoard::from_pos(s - 9 * i) & empty_squares == BitBoard(0)
+            || BitBoard::from_pos(s - 9 * i) & board.get_sides()[side as usize] != BitBoard(0)
           {
             break;
           }
@@ -243,9 +244,9 @@ impl MoveGen {
         }
 
         // SE
-        for i in 1..edge_dists.0 {
+        for i in 1..min(edge_dists.0, edge_dists.3) {
           if s.overflowing_sub(7 * i).1
-            || BitBoard::from_pos(s - 7 * i) & empty_squares == BitBoard(0)
+            || BitBoard::from_pos(s - 7 * i) & board.get_sides()[side as usize] != BitBoard(0)
           {
             break;
           }
@@ -264,7 +265,6 @@ impl MoveGen {
       }
     }
 
-    println!("Bishop Moves: {:#?}", moves);
     moves
   }
 
@@ -274,15 +274,92 @@ impl MoveGen {
     moves
   }
 
-  pub fn rock_moves(bb: BitBoard) -> Vec<Move> {
+  pub fn rook_moves(rooks: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
+    
+    for s in 0..63 {
+      let position_bb = BitBoard::from_pos(s);
+      if position_bb & rooks != BitBoard(0) {
+        let edge_dists: (u8, u8, u8, u8) = (
+          //RIGHT, LEFT, TOP, BOTTOM
+          8 - (s % 8) - 1,
+          8 - (8 - (s % 8)), 
+          8 - (s / 8) - 1,
+          (s / 8)
+         );
 
+         for i in 1..(edge_dists.0 + 1) {
+           if s + i > 63 || BitBoard::from_pos(s + i) & board.get_sides()[side as usize] != BitBoard(0) {
+            break;
+           }
+
+           let capture = Self::check_capture(s + i, board, side);
+
+           moves.push(Move {
+            start: s,
+            dest: s + i,
+            capture,
+            mtype: "Rook right".to_string(),
+           });
+
+           if capture.is_some() { break; }
+         }
+
+         for i in 1..(edge_dists.1 + 1) {
+          if s.overflowing_sub(i).1 || BitBoard::from_pos(s - i) & board.get_sides()[side as usize] != BitBoard(0) { break; }
+
+          let capture = Self::check_capture(s - i, board, side);
+
+          moves.push(Move {
+            start: s,
+            dest: s - i,
+            capture,
+            mtype: "Rook Left".to_string(),
+          });
+
+          if capture.is_some() { break; }
+         }
+
+         for i in 1..(edge_dists.2 + 1) {
+          if s + i * 8 > 63 || BitBoard::from_pos(s + i * 8) & board.get_sides()[side as usize] != BitBoard(0) { break; }
+
+          let capture = Self::check_capture(s + i * 8, board, side);
+
+          moves.push(Move {
+            start: s,
+            dest: s + i * 8,
+            capture,
+            mtype: "Rook Up".to_string(),
+          });
+
+          if capture.is_some() { break; }
+         }
+
+
+         for i in 1..(edge_dists.3 + 1) {
+          if s.overflowing_sub(i * 8).1 || BitBoard::from_pos(s - i * 8) & board.get_sides()[side as usize] != BitBoard(0) { break; }
+
+          let capture = Self::check_capture(s - i * 8, board, side);
+
+          moves.push(Move {
+            start: s,
+            dest: s - i * 8,
+            capture,
+            mtype: "Rook down".to_string()
+          });
+
+          if capture.is_some() { break; }
+         }
+      }
+    }
+    println!("Rook Moves: {:#?}", moves);
     moves
   }
 
-  pub fn queen_moves(bb: BitBoard) -> Vec<Move> {
+  pub fn queen_moves(bb: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
-
+    moves.append(&mut Self::bishop_moves(bb, board, side));
+    moves.append(&mut Self::rook_moves(bb, board, side));
     moves
   }
 
