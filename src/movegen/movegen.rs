@@ -40,6 +40,20 @@ impl MoveGen {
     moves
   }
 
+  pub fn check_capture(p: u8, board: Board, side: Sides) -> Option<Pieces> {
+    let mut capture: Option<Pieces> = None;
+    println!("{:?}", !side);
+
+    if BitBoard::from_pos(p) & board.get_sides()[!side as usize] != BitBoard(0) {
+      for (piece, pieces) in board.bb_pieces[!side as usize].into_iter().enumerate() {
+        if pieces & BitBoard::from_pos(p) != BitBoard(0) {
+          capture = Pieces::from_usize(piece);
+        }
+      }
+    }
+    capture
+  }
+
   pub fn pawn_moves(pawns: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
     let empty_squares: BitBoard = !(board.get_sides()[0] | board.get_sides()[1]);
@@ -54,6 +68,12 @@ impl MoveGen {
       let position_bb = BitBoard::from_pos(s);
 
       if position_bb & pawns != BitBoard(0) {
+        let edge_dists: (u8, u8) = (
+          //RIGHT, LEFT Shouldn't need top and bottom
+          8 - (s % 8),
+          8 - (8 - (s % 8)) + 1,
+        );
+
         let target_square = if (s as i8).overflowing_add(direction).1 {
           64 /* This becomes invalid by by the if statement below */
         } else {
@@ -102,7 +122,7 @@ impl MoveGen {
                   start: s,
                   dest: double_square,
                   capture: None,
-                  mtype: "Double Pawn Move".to_string()
+                  mtype: "Double Pawn Move".to_string(),
                 });
               }
             }
@@ -110,49 +130,38 @@ impl MoveGen {
         }
 
         if capture_squares.0 <= 63 {
-          // TODO: Combine these capture squares, ideally no for loop or at max 1
-          let target_bb = BitBoard::from_pos(capture_squares.0);
+          if edge_dists.0 == 0 {
+            continue;
+          }
 
-          if target_bb & board.get_sides()[!side as usize] != BitBoard(0) {
-            let mut capture: Option<Pieces> = None;
+          let capture = Self::check_capture(capture_squares.0, board, side);
 
-            for (piece, pieces) in board.bb_pieces[!side as usize].into_iter().enumerate() {
-              if pieces & BitBoard::from_pos(capture_squares.0) != BitBoard(0) {
-                capture = Pieces::from_usize(piece);
-              }
-            }
-
+          if capture.is_some() {
             moves.push(Move {
               start: s,
               dest: capture_squares.0,
-              capture,
+              capture: Self::check_capture(capture_squares.0, board, side),
               mtype: "Pawn Capture -1".to_string(),
             })
           }
         }
+
         if capture_squares.1 <= 63 {
-          let target_bb = BitBoard::from_pos(capture_squares.1);
-
-          if target_bb & board.get_sides()[!side as usize] != BitBoard(0) {
-            let mut capture: Option<Pieces> = None;
-
-            for (piece, pieces) in board.bb_pieces[!side as usize].into_iter().enumerate() {
-              if pieces & BitBoard::from_pos(capture_squares.1) != BitBoard(0) {
-                capture = Pieces::from_usize(piece);
-              }
-            }
-
+          if edge_dists.1 == 0 {
+            continue;
+          }
+          let capture = Self::check_capture(capture_squares.1, board, side);
+          if capture.is_some() {
             moves.push(Move {
               start: s,
               dest: capture_squares.1,
-              capture,
-              mtype: "Pawn Capture +1".to_string()
+              capture: capture,
+              mtype: "Pawn Capture +1".to_string(),
             })
           }
         }
       }
     }
-    println!("Pawn Moves: {:#?}", moves);
     moves
   }
 
@@ -171,7 +180,6 @@ impl MoveGen {
           8 - (8 - (s % 8)) + 1,
         );
 
-
         // NE
         for i in 1..(edge_dists.0) {
           let dest = s + 9 * i;
@@ -183,7 +191,7 @@ impl MoveGen {
             start: s,
             dest,
             capture: None,
-            mtype: "Bishop NE".to_string()
+            mtype: "Bishop NE".to_string(),
           })
         }
 
@@ -194,32 +202,35 @@ impl MoveGen {
           if dest > 63 || BitBoard::from_pos(dest) & empty_squares == BitBoard(0) {
             break;
           }
-          
 
           moves.push(Move {
             start: s,
             dest: s + 7 * i,
             capture: None,
-            mtype: "Bishop NW".to_string()
+            mtype: "Bishop NW".to_string(),
           })
         }
 
         // SW
         for i in 1..edge_dists.1 {
-          if s.overflowing_sub(9 * i).1 || BitBoard::from_pos(s - 9 * i) & empty_squares == BitBoard(0) {
+          if s.overflowing_sub(9 * i).1
+            || BitBoard::from_pos(s - 9 * i) & empty_squares == BitBoard(0)
+          {
             break;
           }
           moves.push(Move {
             start: s,
             dest: s - 9 * i,
             capture: None,
-            mtype: "Bishop SW".to_string()
+            mtype: "Bishop SW".to_string(),
           })
         }
 
         // SE
         for i in 1..edge_dists.0 {
-          if s.overflowing_sub(7 * i).1 || BitBoard::from_pos(s - 7 * i) & empty_squares == BitBoard(0) {
+          if s.overflowing_sub(7 * i).1
+            || BitBoard::from_pos(s - 7 * i) & empty_squares == BitBoard(0)
+          {
             break;
           }
 
@@ -227,13 +238,12 @@ impl MoveGen {
             start: s,
             dest: s - 7 * i,
             capture: None,
-            mtype: "Bishop SE".to_string()
+            mtype: "Bishop SE".to_string(),
           })
         }
       }
     }
 
-    println!("Bishop Moves {:#?}", moves);
     moves
   }
 

@@ -237,10 +237,10 @@ impl Board {
       }
     }
 
-    self.bb_pieces[side as usize][piece] =
-      self.bb_pieces[side as usize][piece] ^ BitBoard::from_pos(m.start);
-    self.bb_pieces[side as usize][piece] =
-      self.bb_pieces[side as usize][piece] | BitBoard::from_pos(m.dest);
+    // self.bb_pieces[side as usize][piece] =
+    //   self.bb_pieces[side as usize][piece] ^ BitBoard::from_pos(m.start);
+    self.bb_pieces[side as usize][piece] = self.bb_pieces[side as usize][piece]
+      ^ (BitBoard::from_pos(m.dest) | BitBoard::from_pos(m.start));
 
     if m.capture != None {
       let op_side = if side == Sides::WHITE {

@@ -42,39 +42,45 @@ impl Position {
             };
 
             let mut bmove: Move = Default::default();
-            let mut move_side: Option<Sides> = None;
 
             for (side, sides) in board.bb_pieces.into_iter().enumerate() {
               for pieces in sides.into_iter() {
                 if pieces & BitBoard::from_pos(start) != BitBoard(0) {
-                  move_side = Sides::from_usize(side);
                   bmove.start = start;
                   bmove.dest = dest;
                 }
 
-                if Sides::from_usize(side) != move_side
-                  && Sides::from_usize(side) != None
-                  && move_side != None
+                for (piece, pieces) in board.bb_pieces[!Sides::from_usize(side).unwrap() as usize]
+                  .into_iter()
+                  .enumerate()
                 {
-                  for (piece, pieces) in board.bb_pieces[side].into_iter().enumerate() {
-                    if pieces & BitBoard::from_pos(dest) != BitBoard(0) {
-                      bmove.capture = Pieces::from_usize(piece);
-                    }
+                  if BitBoard::from_pos(dest) & pieces != BitBoard(0) {
+                    bmove.capture = Pieces::from_usize(piece);
                   }
                 }
+
+                // if Sides::from_usize(side) != move_side
+                //   && move_side != None
+                // {
+                //   for (piece, pieces) in board.bb_pieces[side].into_iter().enumerate() {
+                //     if pieces & BitBoard::from_pos(dest) != BitBoard(0) {
+                //       println!("Move {} ({}{}) is a capture", board.full_moves, start_str, end_str);
+                //       bmove.capture = Pieces::from_usize(piece);
+                //     }
+                //   }
+                // }
               }
             }
+
             board.apply_move(bmove);
             board.full_moves = move_count + 1;
+
             if (move_count + 1) % 2 == 0 {
               board.turn = Sides::WHITE;
             } else {
               board.turn = Sides::BLACK;
             }
           }
-          // println!("{:#?}", moves);
-          // board.apply_moves(moves);
-          // print_bitboard(board.bb_pieces[Sides::BLACK as usize][Pieces::PAWN as usize]);
         }
         _ => {}
       }
