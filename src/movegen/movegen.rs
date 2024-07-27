@@ -21,19 +21,7 @@ impl MoveGen {
           Some(Pieces::KNIGHT) => moves.append(&mut Self::knight_moves(bb)),
           Some(Pieces::ROOK) => moves.append(&mut Self::rook_moves(bb, board, side)),
           Some(Pieces::QUEEN) => moves.append(&mut Self::queen_moves(bb, board, side)),
-          Some(Pieces::KING) => moves.append(&mut Self::king_moves(
-            bb,
-            if Sides::from_usize(s) == Some(Sides::WHITE) {
-              board.white_can_oo
-            } else {
-              board.black_can_oo
-            },
-            if Sides::from_usize(s) == Some(Sides::WHITE) {
-              board.white_can_ooo
-            } else {
-              board.black_can_ooo
-            },
-          )),
+          Some(Pieces::KING) => moves.append(&mut Self::king_moves(bb, board, side)),
 
           None => continue,
         }
@@ -178,15 +166,16 @@ impl MoveGen {
         let edge_dists: (u8, u8, u8, u8) = (
           //RIGHT, LEFT, TOP, BOTTOM
           8 - (s % 8) - 1,
-          8 - (8 - (s % 8)), 
+          8 - (8 - (s % 8)),
           8 - (s / 8) - 1,
-          (s / 8)
-         );
+          (s / 8),
+        );
 
         // NE
         for i in 1..min(edge_dists.0, edge_dists.2) {
           let dest = s + 9 * i;
-          if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] != BitBoard(0) {
+          if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] != BitBoard(0)
+          {
             break;
           }
 
@@ -199,15 +188,17 @@ impl MoveGen {
             mtype: "Bishop NE".to_string(),
           });
 
-
-          if capture.is_some() { break; } // Cant keep moving direction if there is a piece to capture
+          if capture.is_some() {
+            break;
+          } // Cant keep moving direction if there is a piece to capture
         }
 
         // NW
-        for i in 1..min(edge_dists.1, edge_dists.2){
+        for i in 1..min(edge_dists.1, edge_dists.2) {
           let dest = s + 7 * i;
 
-          if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] != BitBoard(0) {
+          if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] != BitBoard(0)
+          {
             break;
           }
 
@@ -220,7 +211,9 @@ impl MoveGen {
             mtype: "Bishop NW".to_string(),
           });
 
-          if capture.is_some() { break; }
+          if capture.is_some() {
+            break;
+          }
         }
 
         // SW
@@ -240,7 +233,9 @@ impl MoveGen {
             mtype: "Bishop SW".to_string(),
           });
 
-          if capture.is_some() { break; }
+          if capture.is_some() {
+            break;
+          }
         }
 
         // SE
@@ -260,7 +255,9 @@ impl MoveGen {
             mtype: "Bishop SE".to_string(),
           });
 
-          if capture.is_some() { break; }
+          if capture.is_some() {
+            break;
+          }
         }
       }
     }
@@ -276,37 +273,45 @@ impl MoveGen {
 
   pub fn rook_moves(rooks: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
-    
+
     for s in 0..63 {
       let position_bb = BitBoard::from_pos(s);
       if position_bb & rooks != BitBoard(0) {
         let edge_dists: (u8, u8, u8, u8) = (
           //RIGHT, LEFT, TOP, BOTTOM
           8 - (s % 8) - 1,
-          8 - (8 - (s % 8)), 
+          8 - (8 - (s % 8)),
           8 - (s / 8) - 1,
-          (s / 8)
-         );
+          (s / 8),
+        );
 
-         for i in 1..(edge_dists.0 + 1) {
-           if s + i > 63 || BitBoard::from_pos(s + i) & board.get_sides()[side as usize] != BitBoard(0) {
+        for i in 1..(edge_dists.0 + 1) {
+          if s + i > 63
+            || BitBoard::from_pos(s + i) & board.get_sides()[side as usize] != BitBoard(0)
+          {
             break;
-           }
+          }
 
-           let capture = Self::check_capture(s + i, board, side);
+          let capture = Self::check_capture(s + i, board, side);
 
-           moves.push(Move {
+          moves.push(Move {
             start: s,
             dest: s + i,
             capture,
             mtype: "Rook right".to_string(),
-           });
+          });
 
-           if capture.is_some() { break; }
-         }
+          if capture.is_some() {
+            break;
+          }
+        }
 
-         for i in 1..(edge_dists.1 + 1) {
-          if s.overflowing_sub(i).1 || BitBoard::from_pos(s - i) & board.get_sides()[side as usize] != BitBoard(0) { break; }
+        for i in 1..(edge_dists.1 + 1) {
+          if s.overflowing_sub(i).1
+            || BitBoard::from_pos(s - i) & board.get_sides()[side as usize] != BitBoard(0)
+          {
+            break;
+          }
 
           let capture = Self::check_capture(s - i, board, side);
 
@@ -317,11 +322,17 @@ impl MoveGen {
             mtype: "Rook Left".to_string(),
           });
 
-          if capture.is_some() { break; }
-         }
+          if capture.is_some() {
+            break;
+          }
+        }
 
-         for i in 1..(edge_dists.2 + 1) {
-          if s + i * 8 > 63 || BitBoard::from_pos(s + i * 8) & board.get_sides()[side as usize] != BitBoard(0) { break; }
+        for i in 1..(edge_dists.2 + 1) {
+          if s + i * 8 > 63
+            || BitBoard::from_pos(s + i * 8) & board.get_sides()[side as usize] != BitBoard(0)
+          {
+            break;
+          }
 
           let capture = Self::check_capture(s + i * 8, board, side);
 
@@ -332,12 +343,17 @@ impl MoveGen {
             mtype: "Rook Up".to_string(),
           });
 
-          if capture.is_some() { break; }
-         }
+          if capture.is_some() {
+            break;
+          }
+        }
 
-
-         for i in 1..(edge_dists.3 + 1) {
-          if s.overflowing_sub(i * 8).1 || BitBoard::from_pos(s - i * 8) & board.get_sides()[side as usize] != BitBoard(0) { break; }
+        for i in 1..(edge_dists.3 + 1) {
+          if s.overflowing_sub(i * 8).1
+            || BitBoard::from_pos(s - i * 8) & board.get_sides()[side as usize] != BitBoard(0)
+          {
+            break;
+          }
 
           let capture = Self::check_capture(s - i * 8, board, side);
 
@@ -345,14 +361,15 @@ impl MoveGen {
             start: s,
             dest: s - i * 8,
             capture,
-            mtype: "Rook down".to_string()
+            mtype: "Rook down".to_string(),
           });
 
-          if capture.is_some() { break; }
-         }
+          if capture.is_some() {
+            break;
+          }
+        }
       }
     }
-    println!("Rook Moves: {:#?}", moves);
     moves
   }
 
@@ -363,9 +380,112 @@ impl MoveGen {
     moves
   }
 
-  pub fn king_moves(bb: BitBoard, castle_oo: bool, castle_ooo: bool) -> Vec<Move> {
+  pub fn king_moves(kings: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
 
+    let castle_rights: (bool, bool) = (
+      if side == Sides::WHITE {
+        board.white_can_oo
+      } else {
+        board.black_can_oo
+      },
+      if side == Sides::WHITE {
+        board.white_can_ooo
+      } else {
+        board.black_can_ooo
+      },
+    );
+
+    for s in 0..63 {
+      let position_bb = BitBoard::from_pos(s);
+
+      if position_bb & kings != BitBoard(0) {
+        let edge_dists: (u8, u8, u8, u8) = (
+          //RIGHT, LEFT, TOP, BOTTOM
+          8 - (s % 8) - 1,
+          8 - (8 - (s % 8)),
+          8 - (s / 8) - 1,
+          (s / 8),
+        );
+
+        if edge_dists.0 != 0 {
+          if s + 1 < 63
+            && BitBoard::from_pos(s + 1) & board.get_sides()[side as usize] == BitBoard(0)
+          {
+            let capture = Self::check_capture(s + 1, board, side);
+
+            moves.push(Move {
+              start: s,
+              dest: s + 1,
+              capture,
+              mtype: "King right".to_string(),
+            });
+
+            if edge_dists.2 != 0 {
+              if s + 9 < 63
+                && BitBoard::from_pos(s + 9) & board.get_sides()[side as usize] == BitBoard(0)
+              {
+                let capture = Self::check_capture(s + 9, board, side);
+
+                moves.push(Move {
+                  start: s,
+                  dest: s + 9,
+                  capture,
+                  mtype: "King right/up".to_string(),
+                });
+              }
+            }
+          }
+        }
+
+        if edge_dists.1 != 0 {
+          if !s.overflowing_sub(1).1
+            && BitBoard::from_pos(s - 1) & board.get_sides()[side as usize] == BitBoard(0)
+          {
+            let capture = Self::check_capture(s - 1, board, side);
+
+            moves.push(Move {
+              start: s,
+              dest: s - 1,
+              capture,
+              mtype: "King left".to_string(),
+            });
+          }
+        }
+
+        if edge_dists.2 != 0 {
+          if s + 8 < 63
+            && BitBoard::from_pos(s + 8) & board.get_sides()[side as usize] == BitBoard(0)
+          {
+            let capture = Self::check_capture(s + 8, board, side);
+
+            moves.push(Move {
+              start: s,
+              dest: s + 8,
+              capture,
+              mtype: "King up".to_string(),
+            });
+          }
+        }
+
+        if edge_dists.3 != 0 {
+          if !s.overflowing_sub(8).1
+            && BitBoard::from_pos(s - 8) & board.get_sides()[side as usize] == BitBoard(0)
+          {
+            let capture = Self::check_capture(s - 8, board, side);
+
+            moves.push(Move {
+              start: s,
+              dest: s - 8,
+              capture,
+              mtype: "King Down".to_string(),
+            });
+          }
+        }
+      }
+    }
+
+    println!("King moves: {:#?}", moves);
     moves
   }
 }
