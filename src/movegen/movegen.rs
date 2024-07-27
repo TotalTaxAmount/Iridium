@@ -1,4 +1,6 @@
-use std::vec;
+use std::{fmt::DebugSet, vec};
+
+use Iridium::pos_to_alph;
 
 use crate::structs::{print_bitboard, BitBoard, Board, Move, Pieces, Sides};
 
@@ -42,7 +44,6 @@ impl MoveGen {
 
   pub fn check_capture(p: u8, board: Board, side: Sides) -> Option<Pieces> {
     let mut capture: Option<Pieces> = None;
-    println!("{:?}", !side);
 
     if BitBoard::from_pos(p) & board.get_sides()[!side as usize] != BitBoard(0) {
       for (piece, pieces) in board.bb_pieces[!side as usize].into_iter().enumerate() {
@@ -70,8 +71,8 @@ impl MoveGen {
       if position_bb & pawns != BitBoard(0) {
         let edge_dists: (u8, u8) = (
           //RIGHT, LEFT Shouldn't need top and bottom
-          8 - (s % 8),
-          8 - (8 - (s % 8)) + 1,
+          8 - (s % 8) - 1,
+          8 - (8 - (s % 8)),
         );
 
         let target_square = if (s as i8).overflowing_add(direction).1 {
@@ -130,7 +131,7 @@ impl MoveGen {
         }
 
         if capture_squares.0 <= 63 {
-          if edge_dists.0 == 0 {
+          if edge_dists.1 == 0 {
             continue;
           }
 
@@ -140,16 +141,17 @@ impl MoveGen {
             moves.push(Move {
               start: s,
               dest: capture_squares.0,
-              capture: Self::check_capture(capture_squares.0, board, side),
+              capture,
               mtype: "Pawn Capture -1".to_string(),
             })
           }
         }
 
         if capture_squares.1 <= 63 {
-          if edge_dists.1 == 0 {
+          if edge_dists.0 == 0 {
             continue;
           }
+
           let capture = Self::check_capture(capture_squares.1, board, side);
           if capture.is_some() {
             moves.push(Move {
@@ -183,16 +185,21 @@ impl MoveGen {
         // NE
         for i in 1..(edge_dists.0) {
           let dest = s + 9 * i;
-          if dest > 63 || BitBoard::from_pos(dest) & empty_squares == BitBoard(0) {
+          if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] == BitBoard(0) {
             break;
           }
+
+          let capture = Self::check_capture(dest, board, side);
 
           moves.push(Move {
             start: s,
             dest,
-            capture: None,
+            capture,
             mtype: "Bishop NE".to_string(),
-          })
+          });
+
+
+          if capture.is_some() { break; } // Cant keep moving direction if there is a piece to capture
         }
 
         // NW
@@ -203,12 +210,16 @@ impl MoveGen {
             break;
           }
 
+          let capture = Self::check_capture(dest, board, side);
+
           moves.push(Move {
             start: s,
             dest: s + 7 * i,
-            capture: None,
+            capture,
             mtype: "Bishop NW".to_string(),
-          })
+          });
+
+          if capture.is_some() { break; }
         }
 
         // SW
@@ -218,12 +229,17 @@ impl MoveGen {
           {
             break;
           }
+
+          let capture = Self::check_capture(s - 9 * i, board, side);
+
           moves.push(Move {
             start: s,
             dest: s - 9 * i,
-            capture: None,
+            capture,
             mtype: "Bishop SW".to_string(),
-          })
+          });
+
+          if capture.is_some() { break; }
         }
 
         // SE
@@ -234,16 +250,21 @@ impl MoveGen {
             break;
           }
 
+          let capture = Self::check_capture(s - 7 * i, board, side);
+
           moves.push(Move {
             start: s,
             dest: s - 7 * i,
-            capture: None,
+            capture,
             mtype: "Bishop SE".to_string(),
-          })
+          });
+
+          if capture.is_some() { break; }
         }
       }
     }
 
+    println!("Bishop Moves: {:#?}", moves);
     moves
   }
 

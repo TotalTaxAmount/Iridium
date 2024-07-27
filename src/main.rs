@@ -54,6 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
           None => continue,
         };
         println!("{:?} {}", board.turn, board.full_moves);
+        println!("{}", best_move.mtype);
         println!(
           "bestmove {}{}",
           pos_to_alph(best_move.start)?,
