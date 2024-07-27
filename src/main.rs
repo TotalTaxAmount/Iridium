@@ -49,7 +49,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
       },
       "go" => {
         constraints = Time::parse_time(&args);
-        let best_move = match Engine::pick_move(MoveGen::gen_moves(board, board.turn)) {
+        let moves = MoveGen::gen_moves(board, board.turn, true);
+
+        println!("Moves: {:#?} {} possible moves", moves, moves.len());
+        let best_move = match Engine::pick_move(moves) {
           Some(m) => m,
           None => continue,
         };
@@ -104,7 +107,7 @@ mod tests {
       .split(" ")
       .collect();
 
-    let result = MoveGen::gen_moves(Fen::from_fen(&test_fen).unwrap(), Sides::BLACK);
+    let result = MoveGen::gen_moves(Fen::from_fen(&test_fen).unwrap(), Sides::BLACK, true);
     assert_eq!(result, vec![]);
   }
 

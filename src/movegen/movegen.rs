@@ -11,25 +11,43 @@ pub struct MoveGen;
 impl MoveGen {
   const ROW: i8 = 8;
 
-  pub fn gen_moves(board: Board, side: Sides) -> Vec<Move> {
+  pub fn gen_moves(board: Board, side: Sides, checks: bool) -> Vec<Move> {
+    println!("Called function");
     let mut moves: Vec<Move> = vec![];
-    for (s, position) in board.bb_pieces.into_iter().enumerate() {
-      if Sides::from_usize(s) != Some(side) {
-        continue;
-      }
-      for (piece, bb) in position.into_iter().enumerate() {
-        match Pieces::from_usize(piece) {
-          Some(Pieces::PAWN) => moves.append(&mut Self::pawn_moves(bb, board, side)),
-          Some(Pieces::BISHOP) => moves.append(&mut Self::bishop_moves(bb, board, side)),
-          Some(Pieces::KNIGHT) => moves.append(&mut Self::knight_moves(bb, board, side)),
-          Some(Pieces::ROOK) => moves.append(&mut Self::rook_moves(bb, board, side)),
-          Some(Pieces::QUEEN) => moves.append(&mut Self::queen_moves(bb, board, side)),
-          Some(Pieces::KING) => moves.append(&mut Self::king_moves(bb, board, side)),
+    
+    for (piece, bb) in board.bb_pieces[side as usize].into_iter().enumerate() {
+      println!("{piece}");
+      match Pieces::from_usize(piece) {
+        Some(Pieces::PAWN) => moves.append(&mut Self::pawn_moves(bb, board, side)),
+        Some(Pieces::BISHOP) => moves.append(&mut Self::bishop_moves(bb, board, side)),
+        Some(Pieces::KNIGHT) => moves.append(&mut Self::knight_moves(bb, board, side)),
+        Some(Pieces::ROOK) => moves.append(&mut Self::rook_moves(bb, board, side)),
+        Some(Pieces::QUEEN) => moves.append(&mut Self::queen_moves(bb, board, side)),
+        Some(Pieces::KING) => moves.append(&mut Self::king_moves(bb, board, side)),
 
-          None => continue,
-        }
+        None => continue,
       }
     }
+    
+    if checks {
+      let mut legal_moves: Vec<Move> = vec![];
+      for m in moves {
+        let mut clone = board.clone();
+        let opside_moves = Self::gen_moves(clone, !side, false);
+
+        clone.apply_move(m.clone());
+      
+        for om in opside_moves {
+          if om.capture != Some(Pieces::KING) && !legal_moves.contains(&m) {
+            legal_moves.push(m.clone());
+          } else {
+            println!("{:?} is illegal", m);
+          }
+        }
+      }
+      moves = legal_moves;
+    } 
+
     moves
   }
 
@@ -175,10 +193,11 @@ impl MoveGen {
         );
 
         // NE
-        for i in 1..min(edge_dists.0, edge_dists.2) {
+        for i in 1..min(edge_dists.0, edge_dists.2) + 1 {
           let dest = s + 9 * i;
           if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] != BitBoard(0)
           {
+
             break;
           }
 
@@ -197,7 +216,7 @@ impl MoveGen {
         }
 
         // NW
-        for i in 1..min(edge_dists.1, edge_dists.2) {
+        for i in 1..min(edge_dists.1, edge_dists.2) + 1{
           let dest = s + 7 * i;
 
           if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] != BitBoard(0)
@@ -220,7 +239,7 @@ impl MoveGen {
         }
 
         // SW
-        for i in 1..min(edge_dists.1, edge_dists.3) {
+        for i in 1..min(edge_dists.1, edge_dists.3) + 1 {
           if s.overflowing_sub(9 * i).1
             || BitBoard::from_pos(s - 9 * i) & board.get_sides()[side as usize] != BitBoard(0)
           {
@@ -242,7 +261,7 @@ impl MoveGen {
         }
 
         // SE
-        for i in 1..min(edge_dists.0, edge_dists.3) {
+        for i in 1..min(edge_dists.0, edge_dists.3) + 1 {
           if s.overflowing_sub(7 * i).1
             || BitBoard::from_pos(s - 7 * i) & board.get_sides()[side as usize] != BitBoard(0)
           {
@@ -336,8 +355,6 @@ impl MoveGen {
 
 
         if is_valid_move {
-          println!("{:?} -> {:?}: shift: {}", pos_to_alph(s), pos_to_alph(dest.try_into().unwrap()), shift);
-
           let dest_bb = BitBoard::from_pos(dest.try_into().unwrap());
 
           if dest_bb & board.get_sides()[side as usize] == BitBoard(0) {
@@ -353,7 +370,6 @@ impl MoveGen {
         }
       }
     }
-    println!("Knight moves: {:#?}", moves);
     moves
   }
 
