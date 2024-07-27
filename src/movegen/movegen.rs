@@ -2,7 +2,10 @@ use std::{cmp::min, vec};
 
 use Iridium::pos_to_alph;
 
-use crate::structs::{print_bitboard, BitBoard, Board, Move, Pieces, Sides};
+use crate::{
+  parsers::position,
+  structs::{print_bitboard, BitBoard, Board, Move, Pieces, Sides},
+};
 
 pub struct MoveGen;
 impl MoveGen {
@@ -18,7 +21,7 @@ impl MoveGen {
         match Pieces::from_usize(piece) {
           Some(Pieces::PAWN) => moves.append(&mut Self::pawn_moves(bb, board, side)),
           Some(Pieces::BISHOP) => moves.append(&mut Self::bishop_moves(bb, board, side)),
-          Some(Pieces::KNIGHT) => moves.append(&mut Self::knight_moves(bb)),
+          Some(Pieces::KNIGHT) => moves.append(&mut Self::knight_moves(bb, board, side)),
           Some(Pieces::ROOK) => moves.append(&mut Self::rook_moves(bb, board, side)),
           Some(Pieces::QUEEN) => moves.append(&mut Self::queen_moves(bb, board, side)),
           Some(Pieces::KING) => moves.append(&mut Self::king_moves(bb, board, side)),
@@ -265,9 +268,70 @@ impl MoveGen {
     moves
   }
 
-  pub fn knight_moves(bb: BitBoard) -> Vec<Move> {
+  pub fn knight_moves(knights: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
 
+    const SHIFTS: [(i8, &str); 8] = [
+      (6, ""),
+      (10, ""),
+      (15, ""),
+      (17, ""),
+      (-6, ""),
+      (-10, ""),
+      (-15, ""),
+      (-17, ""),
+    ];
+
+    for s in 0..63 {
+      let position_bb = BitBoard::from_pos(s);
+
+      if position_bb & knights == BitBoard(0) {
+        continue;
+      }
+
+      let edge_dists: (u8, u8, u8, u8) = (
+        //RIGHT, LEFT, TOP, BOTTOM
+        8 - (s % 8) - 1,
+        8 - (8 - (s % 8)),
+        8 - (s / 8) - 1,
+        (s / 8),
+      );
+
+      for (shift, mtype) in SHIFTS {
+        let dest = (s as i8).wrapping_add(shift);
+
+        if dest > 63 || dest as u8 == s || dest < 0 {
+          continue;
+        }
+
+        let is_valid_move = match shift {
+          6 | -6 => edge_dists.0 >= 2 && edge_dists.2 >= 1,
+          10 | -10 => edge_dists.0 >= 1 && edge_dists.2 >= 2,
+          15 | -15 => edge_dists.1 >= 2 && edge_dists.2 >= 1,
+          17 | -17 => edge_dists.1 >= 1 && edge_dists.2 >= 2,
+          _ => false,
+        };
+
+        println!("{} - {}", shift, dest);
+
+
+        if is_valid_move {
+          let dest_bb = BitBoard::from_pos(dest.try_into().unwrap());
+
+          if dest_bb & board.get_sides()[side as usize] == BitBoard(0) {
+            let capture = Self::check_capture(dest.try_into().unwrap(), board, side);
+
+            moves.push(Move {
+              start: s,
+              dest: dest.try_into().unwrap(),
+              capture,
+              mtype: mtype.to_string(),
+            })
+          }
+        }
+      }
+    }
+    println!("Knight moves: {:#?}", moves);
     moves
   }
 
@@ -420,20 +484,35 @@ impl MoveGen {
               capture,
               mtype: "King right".to_string(),
             });
+          }
 
-            if edge_dists.2 != 0 {
-              if s + 9 < 63
-                && BitBoard::from_pos(s + 9) & board.get_sides()[side as usize] == BitBoard(0)
-              {
-                let capture = Self::check_capture(s + 9, board, side);
+          if edge_dists.2 != 0 {
+            if s + 9 < 63
+              && BitBoard::from_pos(s + 9) & board.get_sides()[side as usize] == BitBoard(0)
+            {
+              let capture = Self::check_capture(s + 9, board, side);
 
-                moves.push(Move {
-                  start: s,
-                  dest: s + 9,
-                  capture,
-                  mtype: "King right/up".to_string(),
-                });
-              }
+              moves.push(Move {
+                start: s,
+                dest: s + 9,
+                capture,
+                mtype: "King right/up".to_string(),
+              });
+            }
+          }
+
+          if edge_dists.3 != 0 {
+            if !s.overflowing_sub(7).1
+              && BitBoard::from_pos(s - 7) & board.get_sides()[side as usize] == BitBoard(0)
+            {
+              let capture = Self::check_capture(s - 7, board, side);
+
+              moves.push(Move {
+                start: s,
+                dest: s - 7,
+                capture,
+                mtype: "King right/down".to_string(),
+              });
             }
           }
         }
@@ -450,6 +529,36 @@ impl MoveGen {
               capture,
               mtype: "King left".to_string(),
             });
+          }
+
+          if edge_dists.2 != 0 {
+            if s + 7 < 63
+              && BitBoard::from_pos(s + 7) & board.get_sides()[side as usize] == BitBoard(0)
+            {
+              let capture = Self::check_capture(s + 7, board, side);
+
+              moves.push(Move {
+                start: s,
+                dest: s + 7,
+                capture,
+                mtype: "King left/up".to_string(),
+              });
+            }
+          }
+
+          if edge_dists.3 != 0 {
+            if !s.overflowing_sub(9).1
+              && BitBoard::from_pos(s - 9) & board.get_sides()[side as usize] == BitBoard(0)
+            {
+              let capture = Self::check_capture(s - 9, board, side);
+
+              moves.push(Move {
+                start: s,
+                dest: s - 9,
+                capture,
+                mtype: "King left/down".to_string(),
+              });
+            }
           }
         }
 
@@ -484,8 +593,6 @@ impl MoveGen {
         }
       }
     }
-
-    println!("King moves: {:#?}", moves);
     moves
   }
 }
