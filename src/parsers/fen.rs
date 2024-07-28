@@ -1,6 +1,9 @@
 use std::{error, fmt};
 
-use crate::structs::{BitBoard, Board, Pieces, Sides};
+use crate::{
+  engine::engine::Engine,
+  structs::{BitBoard, Board, Pieces, Sides},
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct FenError;
@@ -50,7 +53,7 @@ impl Fen {
       en_passant_square: en_passant?,
       half_moves: halfmoves?,
       full_moves: fullmoves?,
-      score: 0,
+      score: 0.0,
     })
   }
 

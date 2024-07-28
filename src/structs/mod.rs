@@ -137,7 +137,7 @@ impl Shr for BitBoard {
   }
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Board {
   // pub bb_sides: [BitBoard; 2],
   pub bb_pieces: [[BitBoard; 6]; 2],
@@ -158,7 +158,7 @@ pub struct Board {
 
   pub full_moves: usize,
 
-  pub score: u64,
+  pub score: f32,
 }
 
 impl Display for Board {
@@ -216,7 +216,7 @@ impl Default for Board {
       en_passant_square: None,
       half_moves: 0,
       full_moves: 0,
-      score: 0,
+      score: 0.0,
     }
   }
 }
@@ -270,12 +270,11 @@ impl Board {
   }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub struct Move {
   pub start: u8,
   pub dest: u8,
   pub capture: Option<Pieces>,
-  pub mtype: String,
 }
 
 pub fn print_bitboard(bitboard: BitBoard) {

@@ -52,12 +52,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let moves = MoveGen::gen_moves(board, board.turn, true);
 
         println!("possible moves {}", moves.len());
-        let best_move = match Engine::pick_move(moves) {
+        let best_move = match Engine::bestmove(board, moves, board.turn,2) {
           Some(m) => m,
           None => continue,
         };
         println!("{:?} {}", board.turn, board.full_moves);
-        println!("{}", best_move.mtype);
+        println!("Score: {}", Engine::evaluate(board));
         println!(
           "bestmove {}{}",
           pos_to_alph(best_move.start)?,
@@ -88,6 +88,7 @@ mod tests {
   use movegen::movegen::MoveGen;
   use parsers::{fen::Fen, time::TimerKeeper};
   use structs::{print_bitboard, BitBoard, Move, Pieces, Sides};
+  use Iridium::bitcount;
 
   use super::*;
 
@@ -98,7 +99,7 @@ mod tests {
       .collect();
 
     let result = Engine::evaluate(Fen::from_fen(&test_fen).unwrap());
-    assert_eq!(result, 0);
+    assert_eq!(result, 0.0);
   }
 
   #[test]
@@ -145,6 +146,11 @@ mod tests {
   #[test]
   fn test_pos_to_alph() {
     assert_eq!(pos_to_alph(36), Ok("e5".to_string()))
+  }
+
+  #[test]
+  fn test_bitcount() {
+    assert_eq!(8.0, bitcount(Board::default().bb_pieces[0][0].0));
   }
 
   // #[test]

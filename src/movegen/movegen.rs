@@ -1,11 +1,6 @@
 use std::{cmp::min, vec};
 
-use Iridium::pos_to_alph;
-
-use crate::{
-  parsers::position,
-  structs::{print_bitboard, BitBoard, Board, Move, Pieces, Sides},
-};
+use crate::structs::{BitBoard, Board, Move, Pieces, Sides};
 
 pub struct MoveGen;
 impl MoveGen {
@@ -31,7 +26,7 @@ impl MoveGen {
       let mut legal_moves: Vec<Move> = vec![];
       for m in moves {
         let mut clone = board.clone();
-        clone.apply_move(m.clone());
+        clone.apply_move(m);
 
         let opside_moves = Self::gen_moves(clone, !side, false);
 
@@ -44,7 +39,7 @@ impl MoveGen {
         }
 
         if is_legal {
-          legal_moves.push(m.clone());
+          legal_moves.push(m);
         }
       }
       moves = legal_moves;
@@ -122,7 +117,6 @@ impl MoveGen {
               start: s,
               dest: target_square,
               capture: None,
-              mtype: "Single Pawn move".to_string(),
             });
 
             if double_square <= 63 {
@@ -134,7 +128,6 @@ impl MoveGen {
                   start: s,
                   dest: double_square,
                   capture: None,
-                  mtype: "Double Pawn Move".to_string(),
                 });
               }
             }
@@ -153,7 +146,6 @@ impl MoveGen {
               start: s,
               dest: capture_squares.0,
               capture,
-              mtype: "Pawn Capture -1".to_string(),
             })
           }
         }
@@ -168,8 +160,7 @@ impl MoveGen {
             moves.push(Move {
               start: s,
               dest: capture_squares.1,
-              capture: capture,
-              mtype: "Pawn Capture +1".to_string(),
+              capture,
             })
           }
         }
@@ -208,7 +199,6 @@ impl MoveGen {
             start: s,
             dest,
             capture,
-            mtype: "Bishop NE".to_string(),
           });
 
           if capture.is_some() {
@@ -231,7 +221,6 @@ impl MoveGen {
             start: s,
             dest: s + 7 * i,
             capture,
-            mtype: "Bishop NW".to_string(),
           });
 
           if capture.is_some() {
@@ -253,7 +242,6 @@ impl MoveGen {
             start: s,
             dest: s - 9 * i,
             capture,
-            mtype: "Bishop SW".to_string(),
           });
 
           if capture.is_some() {
@@ -275,7 +263,6 @@ impl MoveGen {
             start: s,
             dest: s - 7 * i,
             capture,
-            mtype: "Bishop SE".to_string(),
           });
 
           if capture.is_some() {
@@ -291,16 +278,7 @@ impl MoveGen {
   pub fn knight_moves(knights: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
 
-    const SHIFTS: [(i8, &str); 8] = [
-      (6, ""),
-      (10, ""),
-      (15, ""),
-      (17, ""),
-      (-6, ""),
-      (-10, ""),
-      (-15, ""),
-      (-17, ""),
-    ];
+    const SHIFTS: [i8; 8] = [6, 10, 15, 17, -6, -10, -15, -17];
 
     for s in 0..63 {
       let position_bb = BitBoard::from_pos(s);
@@ -317,7 +295,7 @@ impl MoveGen {
         (s / 8),
       );
 
-      for (shift, mtype) in SHIFTS {
+      for shift in SHIFTS {
         let dest = (s as i8).wrapping_add(shift);
 
         if dest > 63 || dest as u8 == s || dest < 0 {
@@ -363,7 +341,6 @@ impl MoveGen {
               start: s,
               dest: dest.try_into().unwrap(),
               capture,
-              mtype: mtype.to_string(),
             })
           }
         }
@@ -399,7 +376,6 @@ impl MoveGen {
             start: s,
             dest: s + i,
             capture,
-            mtype: "Rook right".to_string(),
           });
 
           if capture.is_some() {
@@ -420,7 +396,6 @@ impl MoveGen {
             start: s,
             dest: s - i,
             capture,
-            mtype: "Rook Left".to_string(),
           });
 
           if capture.is_some() {
@@ -441,7 +416,6 @@ impl MoveGen {
             start: s,
             dest: s + i * 8,
             capture,
-            mtype: "Rook Up".to_string(),
           });
 
           if capture.is_some() {
@@ -462,7 +436,6 @@ impl MoveGen {
             start: s,
             dest: s - i * 8,
             capture,
-            mtype: "Rook down".to_string(),
           });
 
           if capture.is_some() {
@@ -519,7 +492,6 @@ impl MoveGen {
               start: s,
               dest: s + 1,
               capture,
-              mtype: "King right".to_string(),
             });
           }
 
@@ -533,7 +505,6 @@ impl MoveGen {
                 start: s,
                 dest: s + 9,
                 capture,
-                mtype: "King right/up".to_string(),
               });
             }
           }
@@ -548,7 +519,6 @@ impl MoveGen {
                 start: s,
                 dest: s - 7,
                 capture,
-                mtype: "King right/down".to_string(),
               });
             }
           }
@@ -564,7 +534,6 @@ impl MoveGen {
               start: s,
               dest: s - 1,
               capture,
-              mtype: "King left".to_string(),
             });
           }
 
@@ -578,7 +547,6 @@ impl MoveGen {
                 start: s,
                 dest: s + 7,
                 capture,
-                mtype: "King left/up".to_string(),
               });
             }
           }
@@ -593,7 +561,6 @@ impl MoveGen {
                 start: s,
                 dest: s - 9,
                 capture,
-                mtype: "King left/down".to_string(),
               });
             }
           }
@@ -609,7 +576,6 @@ impl MoveGen {
               start: s,
               dest: s + 8,
               capture,
-              mtype: "King up".to_string(),
             });
           }
         }
@@ -624,7 +590,6 @@ impl MoveGen {
               start: s,
               dest: s - 8,
               capture,
-              mtype: "King Down".to_string(),
             });
           }
         }

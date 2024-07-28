@@ -66,3 +66,17 @@ pub fn alph_to_pos(alph: &str) -> Result<u8, Error> {
 
   Ok(u8::from(file + rank * 8))
 }
+
+// https://stackoverflow.com/questions/2709430/count-number-of-bits-in-a-64-bit-long-big-integer
+pub fn bitcount(mut i: u64) -> f32 {
+  i = i - ((i >> 1) & 0x5555555555555555);
+
+  i = (i & 0x3333333333333333) + ((i >> 2) & 0x3333333333333333);
+
+  let sum = i + (i >> 4);
+  let mask = 0xF0F0F0F0F0F0F0F;
+  let factor = 0x101010101010101;
+
+  let result = ((sum & mask).wrapping_mul(factor) >> 56) as f32;
+  result
+}
