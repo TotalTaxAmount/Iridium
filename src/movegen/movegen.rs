@@ -12,11 +12,9 @@ impl MoveGen {
   const ROW: i8 = 8;
 
   pub fn gen_moves(board: Board, side: Sides, checks: bool) -> Vec<Move> {
-    println!("Called function");
     let mut moves: Vec<Move> = vec![];
     
     for (piece, bb) in board.bb_pieces[side as usize].into_iter().enumerate() {
-      println!("{piece}");
       match Pieces::from_usize(piece) {
         Some(Pieces::PAWN) => moves.append(&mut Self::pawn_moves(bb, board, side)),
         Some(Pieces::BISHOP) => moves.append(&mut Self::bishop_moves(bb, board, side)),
@@ -33,16 +31,20 @@ impl MoveGen {
       let mut legal_moves: Vec<Move> = vec![];
       for m in moves {
         let mut clone = board.clone();
+        clone.apply_move(m.clone());
+
         let opside_moves = Self::gen_moves(clone, !side, false);
 
-        clone.apply_move(m.clone());
+        let mut is_legal = true;
       
-        for om in opside_moves {
-          if om.capture != Some(Pieces::KING) && !legal_moves.contains(&m) {
-            legal_moves.push(m.clone());
-          } else {
-            println!("{:?} is illegal", m);
+        for op_move in opside_moves {            
+          if op_move.capture == Some(Pieces::KING) {
+            is_legal = false;
           }
+        }
+
+        if is_legal {
+          legal_moves.push(m.clone());
         }
       }
       moves = legal_moves;

@@ -51,7 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         constraints = Time::parse_time(&args);
         let moves = MoveGen::gen_moves(board, board.turn, true);
 
-        println!("Moves: {:#?} {} possible moves", moves, moves.len());
+        println!("possible moves {}", moves.len());
         let best_move = match Engine::pick_move(moves) {
           Some(m) => m,
           None => continue,
