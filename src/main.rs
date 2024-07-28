@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let moves = MoveGen::gen_moves(board, board.turn, true);
 
         println!("possible moves {}", moves.len());
-        let best_move = match Engine::bestmove(board, moves, board.turn,2) {
+        let best_move = match Engine::bestmove(board, board.turn, 2) {
           Some(m) => m,
           None => continue,
         };

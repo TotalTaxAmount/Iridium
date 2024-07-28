@@ -1,3 +1,5 @@
+use std::f32::INFINITY;
+
 use rand::{seq::IteratorRandom, thread_rng};
 use Iridium::bitcount;
 
@@ -36,5 +38,76 @@ impl Engine {
   }
 
   pub fn bestmove(board: Board, side: Sides, depth: u8) -> Option<Move> {
+    let moves = MoveGen::gen_moves(board, side, true);
+
+    let mut best_move = None;
+    let mut best_eval = if side == Sides::WHITE {
+      -INFINITY
+    } else {
+      INFINITY
+    };
+
+    for m in moves {
+      let mut clone_board = board.clone();
+      clone_board.apply_move(m);
+      let eval = Self::alphaBetaMax(clone_board, side, INFINITY, -INFINITY, depth);
+
+      if (side == Sides::WHITE && eval > best_eval) || (side == Sides::BLACK && eval < best_eval) {
+        best_eval = eval;
+        best_move = Some(m);
+      }
+    }
+
+    best_move
+  }
+
+  fn alphaBetaMax(board: Board, side: Sides, mut alpha: f32, beta: f32, depth: u8) -> f32 {
+    if depth == 0 {
+      return Self::evaluate(board);
+    }
+
+    let mut best_value = -INFINITY;
+    for m in MoveGen::gen_moves(board, side, true) {
+      let mut clone_board = board.clone();
+      clone_board.apply_move(m);
+      let score = Self::alphaBetaMin(clone_board, side, alpha, beta, depth - 1);
+      if score > best_value {
+        best_value = alpha;
+        if score > alpha {
+          alpha = score;
+        }
+      }
+
+      if score >= beta {
+        return score;
+      }
+    }
+
+    best_value
+  }
+
+  fn alphaBetaMin(board: Board, side: Sides, alpha: f32, mut beta: f32, depth: u8) -> f32 {
+    if depth == 0 {
+      return -Self::evaluate(board);
+    }
+
+    let mut best_value = INFINITY;
+    for m in MoveGen::gen_moves(board, side, true) {
+      let mut clone_board = board.clone();
+      clone_board.apply_move(m);
+      let score = Self::alphaBetaMax(clone_board, side, alpha, beta, depth - 1);
+
+      if score < best_value {
+        best_value = score;
+        if score < beta {
+          beta = score;
+        }
+      }
+      if score <= alpha {
+        return score;
+      }
+    }
+
+    best_value
   }
 }
