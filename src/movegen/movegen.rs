@@ -13,7 +13,7 @@ impl MoveGen {
 
   pub fn gen_moves(board: Board, side: Sides, checks: bool) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
-    
+
     for (piece, bb) in board.bb_pieces[side as usize].into_iter().enumerate() {
       match Pieces::from_usize(piece) {
         Some(Pieces::PAWN) => moves.append(&mut Self::pawn_moves(bb, board, side)),
@@ -26,7 +26,7 @@ impl MoveGen {
         None => continue,
       }
     }
-    
+
     if checks {
       let mut legal_moves: Vec<Move> = vec![];
       for m in moves {
@@ -36,8 +36,8 @@ impl MoveGen {
         let opside_moves = Self::gen_moves(clone, !side, false);
 
         let mut is_legal = true;
-      
-        for op_move in opside_moves {            
+
+        for op_move in opside_moves {
           if op_move.capture == Some(Pieces::KING) {
             is_legal = false;
           }
@@ -48,7 +48,7 @@ impl MoveGen {
         }
       }
       moves = legal_moves;
-    } 
+    }
 
     moves
   }
@@ -199,7 +199,6 @@ impl MoveGen {
           let dest = s + 9 * i;
           if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] != BitBoard(0)
           {
-
             break;
           }
 
@@ -218,7 +217,7 @@ impl MoveGen {
         }
 
         // NW
-        for i in 1..min(edge_dists.1, edge_dists.2) + 1{
+        for i in 1..min(edge_dists.1, edge_dists.2) + 1 {
           let dest = s + 7 * i;
 
           if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] != BitBoard(0)
@@ -341,7 +340,6 @@ impl MoveGen {
         // 17 = 2UP RIGHT
         // -17 = 2DOWN LEFT
 
-
         let is_valid_move = match shift {
           6 => edge_dists.1 >= 2 && edge_dists.2 >= 1,
           10 => edge_dists.0 >= 2 && edge_dists.2 >= 1,
@@ -354,7 +352,6 @@ impl MoveGen {
           -17 => edge_dists.1 >= 1 && edge_dists.3 >= 2,
           _ => false,
         };
-
 
         if is_valid_move {
           let dest_bb = BitBoard::from_pos(dest.try_into().unwrap());
