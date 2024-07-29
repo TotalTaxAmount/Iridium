@@ -1,7 +1,9 @@
 use std::f32::INFINITY;
 
 use crate::{
-  lib::bitcount, movegen::movegen::MoveGen, structs::{print_bitboard, Board, Move, Pieces, Sides}
+  lib::bitcount,
+  movegen::movegen::MoveGen,
+  structs::{print_bitboard, Board, Move, Pieces, Sides},
 };
 
 pub struct Engine;
@@ -46,7 +48,7 @@ impl Engine {
     for m in moves {
       let mut clone_board = board.clone();
       clone_board.apply_move(m);
-      let eval = Self::alphaBetaMax(clone_board, side, INFINITY, -INFINITY, depth);
+      let eval = Self::alphaBetaMax(clone_board, side, -INFINITY, INFINITY, depth);
 
       if (side == Sides::WHITE && eval > best_eval) || (side == Sides::BLACK && eval < best_eval) {
         best_eval = eval;
@@ -59,17 +61,16 @@ impl Engine {
   }
 
   fn alphaBetaMax(board: Board, side: Sides, mut alpha: f32, beta: f32, depth: u8) -> f32 {
-    println!("alphaBetaMax: Depth: {}, Alpha: {}, Beta: {}, Side: {:?}", depth, alpha, beta, side);
     if depth == 0 {
       return Self::evaluate(board);
     }
 
     let mut best_value = -INFINITY;
     for m in MoveGen::gen_moves(board, side, true) {
-      
       let mut clone_board = board.clone();
       clone_board.apply_move(m);
       let score = Self::alphaBetaMin(clone_board, side, alpha, beta, depth - 1);
+
       if score > best_value {
         best_value = score;
         if score > alpha {
@@ -86,7 +87,6 @@ impl Engine {
   }
 
   fn alphaBetaMin(board: Board, side: Sides, alpha: f32, mut beta: f32, depth: u8) -> f32 {
-    println!("alphaBetaMin: Depth: {}, Alpha: {}, Beta: {}, Side: {:?}", depth, alpha, beta, side);
     if depth == 0 {
       return -Self::evaluate(board);
     }

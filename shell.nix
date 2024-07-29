@@ -9,5 +9,6 @@ pkgs.stdenv.mkDerivation {
     rustup
     cargo
     arena
+    cargo-flamegraph
   ];
 }

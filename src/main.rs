@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let moves = MoveGen::gen_moves(board, board.turn, true);
 
         println!("possible moves {}", moves.len());
-        let best_move = match Engine::bestmove(board, board.turn, 30) {
+        let best_move = match Engine::bestmove(board, board.turn, 2) {
           Some(m) => m,
           None => continue,
         };
@@ -74,6 +74,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         print_bitboard(board.get_sides()[0]);
         println!();
         print_bitboard(board.get_sides()[1])
+      }
+      "test" => {
+        println!("{:?}", board.get_sides());
       }
       "quit" => exit(0),
       _ => println!("Error unknown command: {}", command),

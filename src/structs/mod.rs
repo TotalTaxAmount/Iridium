@@ -142,6 +142,8 @@ pub struct Board {
   // pub bb_sides: [BitBoard; 2],
   pub bb_pieces: [[BitBoard; 6]; 2],
 
+  pub bb_sides: [BitBoard; 2],
+
   pub turn: Sides,
 
   pub white_can_oo: bool,
@@ -208,6 +210,7 @@ impl Default for Board {
           BitBoard(1152921504606846976), // King
         ],
       ],
+      bb_sides: [BitBoard(65535), BitBoard(18446462598732840960)],
       turn: Sides::WHITE,
       white_can_oo: true,
       black_can_oo: true,

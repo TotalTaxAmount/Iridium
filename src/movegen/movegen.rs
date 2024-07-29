@@ -51,7 +51,7 @@ impl MoveGen {
   pub fn check_capture(p: u8, board: Board, side: Sides) -> Option<Pieces> {
     let mut capture: Option<Pieces> = None;
 
-    if BitBoard::from_pos(p) & board.get_sides()[!side as usize] != BitBoard(0) {
+    if BitBoard::from_pos(p) & board.bb_sides[!side as usize] != BitBoard(0) {
       for (piece, pieces) in board.bb_pieces[!side as usize].into_iter().enumerate() {
         if pieces & BitBoard::from_pos(p) != BitBoard(0) {
           capture = Pieces::from_usize(piece);
@@ -63,7 +63,7 @@ impl MoveGen {
 
   pub fn pawn_moves(pawns: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
-    let empty_squares: BitBoard = !(board.get_sides()[0] | board.get_sides()[1]);
+    let empty_squares: BitBoard = !(board.bb_sides[0] | board.bb_sides[1]);
 
     let direction = if side == Sides::WHITE {
       Self::ROW
@@ -188,8 +188,7 @@ impl MoveGen {
         // NE
         for i in 1..min(edge_dists.0, edge_dists.2) + 1 {
           let dest = s + 9 * i;
-          if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] != BitBoard(0)
-          {
+          if dest > 63 || BitBoard::from_pos(dest) & board.bb_sides[side as usize] != BitBoard(0) {
             break;
           }
 
@@ -210,8 +209,7 @@ impl MoveGen {
         for i in 1..min(edge_dists.1, edge_dists.2) + 1 {
           let dest = s + 7 * i;
 
-          if dest > 63 || BitBoard::from_pos(dest) & board.get_sides()[side as usize] != BitBoard(0)
-          {
+          if dest > 63 || BitBoard::from_pos(dest) & board.bb_sides[side as usize] != BitBoard(0) {
             break;
           }
 
@@ -231,7 +229,7 @@ impl MoveGen {
         // SW
         for i in 1..min(edge_dists.1, edge_dists.3) + 1 {
           if s.overflowing_sub(9 * i).1
-            || BitBoard::from_pos(s - 9 * i) & board.get_sides()[side as usize] != BitBoard(0)
+            || BitBoard::from_pos(s - 9 * i) & board.bb_sides[side as usize] != BitBoard(0)
           {
             break;
           }
@@ -252,7 +250,7 @@ impl MoveGen {
         // SE
         for i in 1..min(edge_dists.0, edge_dists.3) + 1 {
           if s.overflowing_sub(7 * i).1
-            || BitBoard::from_pos(s - 7 * i) & board.get_sides()[side as usize] != BitBoard(0)
+            || BitBoard::from_pos(s - 7 * i) & board.bb_sides[side as usize] != BitBoard(0)
           {
             break;
           }
@@ -283,65 +281,63 @@ impl MoveGen {
     for s in 0..63 {
       let position_bb = BitBoard::from_pos(s);
 
-      if position_bb & knights == BitBoard(0) {
-        continue;
-      }
+      if position_bb & knights != BitBoard(0) {
+        let edge_dists: (u8, u8, u8, u8) = (
+          //RIGHT, LEFT, TOP, BOTTOM
+          8 - (s % 8) - 1,
+          8 - (8 - (s % 8)),
+          8 - (s / 8) - 1,
+          (s / 8),
+        );
 
-      let edge_dists: (u8, u8, u8, u8) = (
-        //RIGHT, LEFT, TOP, BOTTOM
-        8 - (s % 8) - 1,
-        8 - (8 - (s % 8)),
-        8 - (s / 8) - 1,
-        (s / 8),
-      );
+        for shift in SHIFTS {
+          let dest = (s as i8).wrapping_add(shift);
 
-      for shift in SHIFTS {
-        let dest = (s as i8).wrapping_add(shift);
+          if dest > 63 || dest as u8 == s || dest < 0 {
+            continue;
+          }
 
-        if dest > 63 || dest as u8 == s || dest < 0 {
-          continue;
-        }
+          // EDGE DISTS
+          // 0 = RIGHT
+          // 1 = LEFT
+          // 2 = TOP
+          // 3 = BOTTOM
 
-        // EDGE DISTS
-        // 0 = RIGHT
-        // 1 = LEFT
-        // 2 = TOP
-        // 3 = BOTTOM
+          // SHIFTS
+          // 6 = UP 2LEFT
+          // -6 = DOWN 2RIGHT
+          // 10 = UP 2RIGHT
+          // -10 = DOWN 2LEFT
+          // 15 = 2UP LEFT
+          // -15 = 2DOWN RIGHT
+          // 17 = 2UP RIGHT
+          // -17 = 2DOWN LEFT
 
-        // SHIFTS
-        // 6 = UP 2LEFT
-        // -6 = DOWN 2RIGHT
-        // 10 = UP 2RIGHT
-        // -10 = DOWN 2LEFT
-        // 15 = 2UP LEFT
-        // -15 = 2DOWN RIGHT
-        // 17 = 2UP RIGHT
-        // -17 = 2DOWN LEFT
+          let is_valid_move = match shift {
+            6 => edge_dists.1 >= 2 && edge_dists.2 >= 1,
+            10 => edge_dists.0 >= 2 && edge_dists.2 >= 1,
+            15 => edge_dists.1 >= 1 && edge_dists.2 >= 2,
+            17 => edge_dists.0 >= 1 && edge_dists.2 >= 2,
 
-        let is_valid_move = match shift {
-          6 => edge_dists.1 >= 2 && edge_dists.2 >= 1,
-          10 => edge_dists.0 >= 2 && edge_dists.2 >= 1,
-          15 => edge_dists.1 >= 1 && edge_dists.2 >= 2,
-          17 => edge_dists.0 >= 1 && edge_dists.2 >= 2,
+            -6 => edge_dists.0 >= 2 && edge_dists.3 >= 1,
+            -10 => edge_dists.1 >= 2 && edge_dists.3 >= 1,
+            -15 => edge_dists.0 >= 1 && edge_dists.3 >= 2,
+            -17 => edge_dists.1 >= 1 && edge_dists.3 >= 2,
+            _ => false,
+          };
 
-          -6 => edge_dists.0 >= 2 && edge_dists.3 >= 1,
-          -10 => edge_dists.1 >= 2 && edge_dists.3 >= 1,
-          -15 => edge_dists.0 >= 1 && edge_dists.3 >= 2,
-          -17 => edge_dists.1 >= 1 && edge_dists.3 >= 2,
-          _ => false,
-        };
+          if is_valid_move {
+            let dest_bb = BitBoard::from_pos(dest.try_into().unwrap());
 
-        if is_valid_move {
-          let dest_bb = BitBoard::from_pos(dest.try_into().unwrap());
+            if dest_bb & board.bb_sides[side as usize] == BitBoard(0) {
+              let capture = Self::check_capture(dest.try_into().unwrap(), board, side);
 
-          if dest_bb & board.get_sides()[side as usize] == BitBoard(0) {
-            let capture = Self::check_capture(dest.try_into().unwrap(), board, side);
-
-            moves.push(Move {
-              start: s,
-              dest: dest.try_into().unwrap(),
-              capture,
-            })
+              moves.push(Move {
+                start: s,
+                dest: dest.try_into().unwrap(),
+                capture,
+              })
+            }
           }
         }
       }
@@ -364,8 +360,7 @@ impl MoveGen {
         );
 
         for i in 1..(edge_dists.0 + 1) {
-          if s + i > 63
-            || BitBoard::from_pos(s + i) & board.get_sides()[side as usize] != BitBoard(0)
+          if s + i > 63 || BitBoard::from_pos(s + i) & board.bb_sides[side as usize] != BitBoard(0)
           {
             break;
           }
@@ -385,7 +380,7 @@ impl MoveGen {
 
         for i in 1..(edge_dists.1 + 1) {
           if s.overflowing_sub(i).1
-            || BitBoard::from_pos(s - i) & board.get_sides()[side as usize] != BitBoard(0)
+            || BitBoard::from_pos(s - i) & board.bb_sides[side as usize] != BitBoard(0)
           {
             break;
           }
@@ -405,7 +400,7 @@ impl MoveGen {
 
         for i in 1..(edge_dists.2 + 1) {
           if s + i * 8 > 63
-            || BitBoard::from_pos(s + i * 8) & board.get_sides()[side as usize] != BitBoard(0)
+            || BitBoard::from_pos(s + i * 8) & board.bb_sides[side as usize] != BitBoard(0)
           {
             break;
           }
@@ -425,7 +420,7 @@ impl MoveGen {
 
         for i in 1..(edge_dists.3 + 1) {
           if s.overflowing_sub(i * 8).1
-            || BitBoard::from_pos(s - i * 8) & board.get_sides()[side as usize] != BitBoard(0)
+            || BitBoard::from_pos(s - i * 8) & board.bb_sides[side as usize] != BitBoard(0)
           {
             break;
           }
@@ -483,8 +478,7 @@ impl MoveGen {
         );
 
         if edge_dists.0 != 0 {
-          if s + 1 < 63
-            && BitBoard::from_pos(s + 1) & board.get_sides()[side as usize] == BitBoard(0)
+          if s + 1 < 63 && BitBoard::from_pos(s + 1) & board.bb_sides[side as usize] == BitBoard(0)
           {
             let capture = Self::check_capture(s + 1, board, side);
 
@@ -497,7 +491,7 @@ impl MoveGen {
 
           if edge_dists.2 != 0 {
             if s + 9 < 63
-              && BitBoard::from_pos(s + 9) & board.get_sides()[side as usize] == BitBoard(0)
+              && BitBoard::from_pos(s + 9) & board.bb_sides[side as usize] == BitBoard(0)
             {
               let capture = Self::check_capture(s + 9, board, side);
 
@@ -511,7 +505,7 @@ impl MoveGen {
 
           if edge_dists.3 != 0 {
             if !s.overflowing_sub(7).1
-              && BitBoard::from_pos(s - 7) & board.get_sides()[side as usize] == BitBoard(0)
+              && BitBoard::from_pos(s - 7) & board.bb_sides[side as usize] == BitBoard(0)
             {
               let capture = Self::check_capture(s - 7, board, side);
 
@@ -526,7 +520,7 @@ impl MoveGen {
 
         if edge_dists.1 != 0 {
           if !s.overflowing_sub(1).1
-            && BitBoard::from_pos(s - 1) & board.get_sides()[side as usize] == BitBoard(0)
+            && BitBoard::from_pos(s - 1) & board.bb_sides[side as usize] == BitBoard(0)
           {
             let capture = Self::check_capture(s - 1, board, side);
 
@@ -539,7 +533,7 @@ impl MoveGen {
 
           if edge_dists.2 != 0 {
             if s + 7 < 63
-              && BitBoard::from_pos(s + 7) & board.get_sides()[side as usize] == BitBoard(0)
+              && BitBoard::from_pos(s + 7) & board.bb_sides[side as usize] == BitBoard(0)
             {
               let capture = Self::check_capture(s + 7, board, side);
 
@@ -553,7 +547,7 @@ impl MoveGen {
 
           if edge_dists.3 != 0 {
             if !s.overflowing_sub(9).1
-              && BitBoard::from_pos(s - 9) & board.get_sides()[side as usize] == BitBoard(0)
+              && BitBoard::from_pos(s - 9) & board.bb_sides[side as usize] == BitBoard(0)
             {
               let capture = Self::check_capture(s - 9, board, side);
 
@@ -567,8 +561,7 @@ impl MoveGen {
         }
 
         if edge_dists.2 != 0 {
-          if s + 8 < 63
-            && BitBoard::from_pos(s + 8) & board.get_sides()[side as usize] == BitBoard(0)
+          if s + 8 < 63 && BitBoard::from_pos(s + 8) & board.bb_sides[side as usize] == BitBoard(0)
           {
             let capture = Self::check_capture(s + 8, board, side);
 
@@ -582,7 +575,7 @@ impl MoveGen {
 
         if edge_dists.3 != 0 {
           if !s.overflowing_sub(8).1
-            && BitBoard::from_pos(s - 8) & board.get_sides()[side as usize] == BitBoard(0)
+            && BitBoard::from_pos(s - 8) & board.bb_sides[side as usize] == BitBoard(0)
           {
             let capture = Self::check_capture(s - 8, board, side);
 

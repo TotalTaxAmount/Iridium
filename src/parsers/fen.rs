@@ -43,9 +43,10 @@ impl Fen {
     let halfmoves = Self::parse_halfmoves(fen[4]);
     let fullmoves = Self::parse_fullmoves(fen[5]);
 
-    Ok(Board {
+    let mut board = Board {
       turn: side_to_play?,
       bb_pieces: pos?,
+      bb_sides: [BitBoard(0); 2],
       white_can_oo: castle_rights?.0,
       black_can_oo: castle_rights?.1,
       white_can_ooo: castle_rights?.2,
@@ -54,7 +55,10 @@ impl Fen {
       half_moves: halfmoves?,
       full_moves: fullmoves?,
       score: 0.0,
-    })
+    };
+    board.bb_sides = board.get_sides();
+
+    Ok(board)
   }
 
   fn parse_position(part: &str) -> Result<[[BitBoard; 6]; 2], FenError> {
