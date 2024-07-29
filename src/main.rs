@@ -6,6 +6,7 @@ use parsers::{
 };
 use std::process::exit;
 use structs::{print_bitboard, Board};
+use threading::ThreadPool;
 use Iridium::pos_to_alph;
 
 mod engine;
@@ -13,6 +14,7 @@ mod lib;
 mod movegen;
 mod parsers;
 mod structs;
+mod threading;
 
 fn ucimode() {
   // Identification
@@ -50,9 +52,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
       "go" => {
         constraints = Time::parse_time(&args);
         let moves = MoveGen::gen_moves(board, board.turn, true);
+        let mut thread_pool = ThreadPool::new(5);
 
         println!("possible moves {}", moves.len());
-        let best_move = match Engine::bestmove(board, board.turn, 2) {
+        let best_move = match thread_pool.search(board, board.turn, 3) {
           Some(m) => m,
           None => continue,
         };
@@ -90,7 +93,7 @@ mod tests {
   use lib::{alph_to_pos, pos_to_alph};
   use movegen::movegen::MoveGen;
   use parsers::{fen::Fen, time::TimerKeeper};
-  use structs::{print_bitboard, BitBoard, Move, Pieces, Sides};
+  use structs::Sides;
   use Iridium::bitcount;
 
   use super::*;

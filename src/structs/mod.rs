@@ -254,6 +254,8 @@ impl Board {
       self.bb_pieces[op_side as usize][m.capture.unwrap() as usize] =
         self.bb_pieces[op_side as usize][m.capture.unwrap() as usize] ^ BitBoard::from_pos(m.dest);
     }
+
+    self.bb_sides = self.get_sides();
   }
 
   pub fn apply_moves(&mut self, moves: Vec<Move>) {

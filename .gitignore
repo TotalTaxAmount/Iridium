@@ -1,4 +1,5 @@
 /target
 /.direnv
 /games
+/flamegraph
 Cargo.lock

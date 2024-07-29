@@ -35,32 +35,32 @@ impl Engine {
     score
   }
 
-  pub fn bestmove(board: Board, side: Sides, depth: u8) -> Option<Move> {
-    let moves = MoveGen::gen_moves(board, side, true);
+  // pub fn bestmove(board: Board, side: Sides, depth: u8) -> Option<Move> {
+  //   let moves = MoveGen::gen_moves(board, side, true);
 
-    let mut best_move = None;
-    let mut best_eval = if side == Sides::WHITE {
-      -INFINITY
-    } else {
-      INFINITY
-    };
+  //   let mut best_move = None;
+  //   let mut best_eval = if side == Sides::WHITE {
+  //     -INFINITY
+  //   } else {
+  //     INFINITY
+  //   };
 
-    for m in moves {
-      let mut clone_board = board.clone();
-      clone_board.apply_move(m);
-      let eval = Self::alphaBetaMax(clone_board, side, -INFINITY, INFINITY, depth);
+  //   for m in moves {
+  //     let mut clone_board = board.clone();
+  //     clone_board.apply_move(m);
+  //     let eval = Self::alpha_beta_max(clone_board, side, -INFINITY, INFINITY, depth);
+  //     println!("eval: {}", eval);
+  //     if (side == Sides::WHITE && eval > best_eval) || (side == Sides::BLACK && eval < best_eval) {
+  //       best_eval = eval;
+  //       best_move = Some(m);
+  //     }
+  //   }
 
-      if (side == Sides::WHITE && eval > best_eval) || (side == Sides::BLACK && eval < best_eval) {
-        best_eval = eval;
-        best_move = Some(m);
-      }
-    }
+  //   println!("Best Move: {:?}, Best Evaluation: {}", best_move, best_eval);
+  //   best_move
+  // }
 
-    println!("Best Move: {:?}, Best Evaluation: {}", best_move, best_eval);
-    best_move
-  }
-
-  fn alphaBetaMax(board: Board, side: Sides, mut alpha: f32, beta: f32, depth: u8) -> f32 {
+  pub fn alpha_beta_max(board: Board, side: Sides, mut alpha: f32, beta: f32, depth: u8) -> f32 {
     if depth == 0 {
       return Self::evaluate(board);
     }
@@ -69,7 +69,7 @@ impl Engine {
     for m in MoveGen::gen_moves(board, side, true) {
       let mut clone_board = board.clone();
       clone_board.apply_move(m);
-      let score = Self::alphaBetaMin(clone_board, side, alpha, beta, depth - 1);
+      let score = Self::alpha_beta_min(clone_board, side, alpha, beta, depth - 1);
 
       if score > best_value {
         best_value = score;
@@ -77,7 +77,6 @@ impl Engine {
           alpha = score;
         }
       }
-
       if score >= beta {
         return score;
       }
@@ -86,7 +85,7 @@ impl Engine {
     best_value
   }
 
-  fn alphaBetaMin(board: Board, side: Sides, alpha: f32, mut beta: f32, depth: u8) -> f32 {
+  pub fn alpha_beta_min(board: Board, side: Sides, alpha: f32, mut beta: f32, depth: u8) -> f32 {
     if depth == 0 {
       return -Self::evaluate(board);
     }
@@ -95,7 +94,7 @@ impl Engine {
     for m in MoveGen::gen_moves(board, side, true) {
       let mut clone_board = board.clone();
       clone_board.apply_move(m);
-      let score = Self::alphaBetaMax(clone_board, side, alpha, beta, depth - 1);
+      let score = Self::alpha_beta_max(clone_board, side, alpha, beta, depth - 1);
 
       if score < best_value {
         best_value = score;
