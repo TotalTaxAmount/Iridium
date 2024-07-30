@@ -73,12 +73,6 @@ impl Position {
             }
 
             board.apply_move(bmove);
-            board.full_moves = move_count + 1;
-            if (move_count + 1) % 2 == 0 {
-              board.turn = Sides::WHITE;
-            } else {
-              board.turn = Sides::BLACK;
-            }
           }
         }
         _ => {}

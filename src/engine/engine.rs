@@ -1,9 +1,9 @@
-use std::f32::INFINITY;
+use std::{cmp::max, env::var, f32::INFINITY};
 
 use crate::{
   lib::bitcount,
   movegen::movegen::MoveGen,
-  structs::{print_bitboard, Board, Move, Pieces, Sides},
+  structs::{Board, Pieces, Sides},
 };
 
 pub struct Engine;
@@ -108,5 +108,14 @@ impl Engine {
     }
 
     best_value
+  }
+
+  pub fn nega_scout(board: Board, depth: u8, mut alpha: f32, beta: f32) {
+    if depth == 0 { Self::evaluate(board); }
+
+    let best_value = -INFINITY;
+    let n = beta;
+
+    for m in MoveGen::gen_moves(board, board.turn, checks) {}
   }
 }

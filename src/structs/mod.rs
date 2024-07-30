@@ -3,6 +3,7 @@ use std::{
   default,
   fmt::Display,
   ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr},
+  slice::SliceIndex,
 };
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -256,6 +257,7 @@ impl Board {
     }
 
     self.bb_sides = self.get_sides();
+    self.full_moves += 1;
   }
 
   pub fn apply_moves(&mut self, moves: Vec<Move>) {

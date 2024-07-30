@@ -52,15 +52,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
       "go" => {
         constraints = Time::parse_time(&args);
         let moves = MoveGen::gen_moves(board, board.turn, true);
-        let mut thread_pool = ThreadPool::new(5);
+        let mut thread_pool = ThreadPool::new(30);
 
         println!("possible moves {}", moves.len());
-        let best_move = match thread_pool.search(board, board.turn, 3) {
+        let best_move = match thread_pool.search(board, board.turn, 4) {
           Some(m) => m,
           None => continue,
         };
         println!("{:?} {}", board.turn, board.full_moves);
-        println!("Score: {}", Engine::evaluate(board));
+        board.apply_move(best_move);
+        println!("info score cp {}", Engine::evaluate(board));
         println!(
           "bestmove {}{}",
           pos_to_alph(best_move.start)?,
