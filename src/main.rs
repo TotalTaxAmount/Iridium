@@ -55,7 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut thread_pool = ThreadPool::new(30);
 
         println!("possible moves {}", moves.len());
-        let best_move = match thread_pool.search(board, board.turn, 4) {
+        let best_move = match thread_pool.search(board, board.turn, 3) {
           Some(m) => m,
           None => continue,
         };

@@ -3,7 +3,7 @@ use std::{cmp::max, env::var, f32::INFINITY};
 use crate::{
   lib::bitcount,
   movegen::movegen::MoveGen,
-  structs::{Board, Pieces, Sides},
+  structs::{print_bitboard, Board, Pieces, Sides},
 };
 
 pub struct Engine;
@@ -60,62 +60,87 @@ impl Engine {
   //   best_move
   // }
 
-  pub fn alpha_beta_max(board: Board, side: Sides, mut alpha: f32, beta: f32, depth: u8) -> f32 {
-    if depth == 0 {
-      return Self::evaluate(board);
+  // pub fn alpha_beta_max(board: Board, mut alpha: f32, beta: f32, depth: u8) -> f32 {
+  //   if depth == 0 {
+  //     return Self::evaluate(board);
+  //   }
+
+  //   let mut best_value = -INFINITY;
+  //   for m in MoveGen::gen_moves(board, board.turn, true) {
+  //     let mut clone_board = board.clone();
+  //     clone_board.apply_move(m);
+  //     let score = Self::alpha_beta_min(clone_board, alpha, beta, depth - 1);
+
+  //     if score > best_value {
+  //       best_value = score;
+  //       if score > alpha {
+  //         alpha = score;
+  //       }
+  //     }
+  //     if score >= beta {
+  //       return score;
+  //     }
+  //   }
+
+  //   best_value
+  // }
+
+  // pub fn alpha_beta_min(board: Board, alpha: f32, mut beta: f32, depth: u8) -> f32 {
+  //   if depth == 0 {
+  //     return -Self::evaluate(board);
+  //   }
+
+  //   let mut best_value = INFINITY;
+  //   for m in MoveGen::gen_moves(board, board.turn, true) {
+  //     let mut clone_board = board.clone();
+  //     clone_board.apply_move(m);
+  //     let score = Self::alpha_beta_max(clone_board, alpha, beta, depth - 1);
+
+  //     if score < best_value {
+  //       best_value = score;
+  //       if score < beta {
+  //         beta = score;
+  //       }
+  //     }
+  //     if score <= alpha {
+  //       return score;
+  //     }
+  //   }
+
+  //   best_value
+  // }
+
+  pub fn nega_scout(board: Board, depth: u8, mut alpha: f32, beta: f32) -> f32 {
+    if depth == 0 { 
+      // let color = if board.turn == Sides::WHITE { 1.0 } else { -1.0 }; 
+      return Self::evaluate(board); 
     }
 
     let mut best_value = -INFINITY;
-    for m in MoveGen::gen_moves(board, side, true) {
+    let mut n = beta;
+
+    for m in MoveGen::gen_moves(board, board.turn, true) {
       let mut clone_board = board.clone();
       clone_board.apply_move(m);
-      let score = Self::alpha_beta_min(clone_board, side, alpha, beta, depth - 1);
+      // println!();
+      // print_bitboard(clone_board.bb_sides[0] | clone_board.bb_sides[1]);
+
+      let score = -Self::nega_scout(clone_board, depth - 1, -n, -alpha);
 
       if score > best_value {
-        best_value = score;
-        if score > alpha {
-          alpha = score;
+        if n == beta || depth <= 2 {
+          best_value = score;
+        } else {
+            best_value = -Self::nega_scout(clone_board, depth - 1, -beta, -score);
         }
       }
-      if score >= beta {
-        return score;
-      }
+      if score > alpha { alpha = score; };
+
+      if alpha >= beta { return alpha; };
+
+      n = alpha + 1.0;
     }
 
     best_value
-  }
-
-  pub fn alpha_beta_min(board: Board, side: Sides, alpha: f32, mut beta: f32, depth: u8) -> f32 {
-    if depth == 0 {
-      return -Self::evaluate(board);
-    }
-
-    let mut best_value = INFINITY;
-    for m in MoveGen::gen_moves(board, side, true) {
-      let mut clone_board = board.clone();
-      clone_board.apply_move(m);
-      let score = Self::alpha_beta_max(clone_board, side, alpha, beta, depth - 1);
-
-      if score < best_value {
-        best_value = score;
-        if score < beta {
-          beta = score;
-        }
-      }
-      if score <= alpha {
-        return score;
-      }
-    }
-
-    best_value
-  }
-
-  pub fn nega_scout(board: Board, depth: u8, mut alpha: f32, beta: f32) {
-    if depth == 0 { Self::evaluate(board); }
-
-    let best_value = -INFINITY;
-    let n = beta;
-
-    for m in MoveGen::gen_moves(board, board.turn, checks) {}
   }
 }

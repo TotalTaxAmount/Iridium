@@ -1,7 +1,5 @@
 use std::{
-  f32::INFINITY,
-  thread::{Builder, JoinHandle},
-  vec,
+  f32::INFINITY, thread::{Builder, JoinHandle}, vec
 };
 
 use Iridium::pos_to_alph;
@@ -55,10 +53,10 @@ impl ThreadPool {
           // } else {
           //   Engine::alpha_beta_min(clone_board, side, -INFINITY, INFINITY, depth - 1)
           // };
-          let eval = -Engine::alpha_beta(clone_board, -INFINITY, INFINITY, depth - 1);
+          let eval = -Engine::nega_scout(clone_board, depth - 1, -INFINITY, INFINITY);
 
           println!(
-            "{} - {:?}{:?} - {:?}",
+            "Alpha Beta {} - {:?}{:?} - {:?}",
             eval,
             pos_to_alph(m.start).unwrap(),
             pos_to_alph(m.dest).unwrap(),
