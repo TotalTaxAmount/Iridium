@@ -111,9 +111,9 @@ impl Engine {
   // }
 
   pub fn nega_scout(board: Board, depth: u8, mut alpha: f32, beta: f32) -> f32 {
-    if depth == 0 { 
-      // let color = if board.turn == Sides::WHITE { 1.0 } else { -1.0 }; 
-      return Self::evaluate(board); 
+    if depth == 0 {
+      // let color = if board.turn == Sides::WHITE { 1.0 } else { -1.0 };
+      return Self::evaluate(board);
     }
 
     let mut best_value = -INFINITY;
@@ -128,15 +128,19 @@ impl Engine {
       let score = -Self::nega_scout(clone_board, depth - 1, -n, -alpha);
 
       if score > best_value {
-        if n == beta || depth <= 2 {
-          best_value = score;
+        if alpha < score && score < beta {
+          best_value = score.max(best_value);
         } else {
-            best_value = -Self::nega_scout(clone_board, depth - 1, -beta, -score);
+          best_value = -Self::nega_scout(clone_board, depth - 1, -beta, -score);
         }
       }
-      if score > alpha { alpha = score; };
+      if score > alpha {
+        alpha = score;
+      };
 
-      if alpha >= beta { return alpha; };
+      if alpha >= beta {
+        return alpha;
+      };
 
       n = alpha + 1.0;
     }

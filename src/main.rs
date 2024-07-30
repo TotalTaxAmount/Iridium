@@ -30,6 +30,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let mut board: Board = Board::default();
   let mut constraints: Constraints;
 
+  let mut thread_pool = ThreadPool::new(30);
+
   loop {
     let input = lib::get_input("");
     let args: Vec<&str> = input.split(" ").collect();
@@ -52,7 +54,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
       "go" => {
         constraints = Time::parse_time(&args);
         let moves = MoveGen::gen_moves(board, board.turn, true);
-        let mut thread_pool = ThreadPool::new(30);
 
         println!("possible moves {}", moves.len());
         let best_move = match thread_pool.search(board, board.turn, 3) {
@@ -68,7 +69,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
           pos_to_alph(best_move.dest)?
         );
       }
-      "stop" => {}
+      "stop" => {
+       
+      }
       "ponder" => {}
       "ponderhint" => {}
       "pb" => {

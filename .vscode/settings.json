@@ -10,6 +10,7 @@
     "fullmoves",
     "halfmoves",
     "isready",
+    "keepalive",
     "movegen",
     "movetime",
     "mtype",
