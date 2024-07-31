@@ -82,10 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         print_bitboard(board.get_sides()[1])
       }
       "test" => {
-        println!(
-          "{:?}",
-          Engine::pvs(board, 2, -INFINITY, INFINITY, structs::Sides::WHITE)
-        );
+        println!("Gen {:#?}", MoveGen::gen_moves(board, board.turn, false));
       }
       "quit" => exit(0),
       _ => println!("Error unknown command: {}", command),

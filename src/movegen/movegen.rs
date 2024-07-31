@@ -1,6 +1,6 @@
 use std::{cmp::min, vec};
 
-use crate::structs::{BitBoard, Board, Move, Pieces, Sides};
+use crate::structs::{print_bitboard, BitBoard, Board, Move, Pieces, Sides};
 
 pub struct MoveGen;
 impl MoveGen {
@@ -71,7 +71,7 @@ impl MoveGen {
       -Self::ROW
     };
 
-    for s in 0..63 {
+    for s in 0..64 {
       let position_bb = BitBoard::from_pos(s);
 
       if position_bb & pawns != BitBoard(0) {
@@ -173,7 +173,7 @@ impl MoveGen {
   pub fn bishop_moves(bishops: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
 
-    for s in 0..63 {
+    for s in 0..64 {
       let position_bb = BitBoard::from_pos(s);
 
       if position_bb & bishops != BitBoard(0) {
@@ -269,7 +269,6 @@ impl MoveGen {
         }
       }
     }
-
     moves
   }
 
@@ -278,7 +277,7 @@ impl MoveGen {
 
     const SHIFTS: [i8; 8] = [6, 10, 15, 17, -6, -10, -15, -17];
 
-    for s in 0..63 {
+    for s in 0..64 {
       let position_bb = BitBoard::from_pos(s);
 
       if position_bb & knights != BitBoard(0) {
@@ -348,7 +347,7 @@ impl MoveGen {
   pub fn rook_moves(rooks: BitBoard, board: Board, side: Sides) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
 
-    for s in 0..63 {
+    for s in 0..64 {
       let position_bb = BitBoard::from_pos(s);
       if position_bb & rooks != BitBoard(0) {
         let edge_dists: (u8, u8, u8, u8) = (
@@ -446,6 +445,7 @@ impl MoveGen {
     let mut moves: Vec<Move> = vec![];
     moves.append(&mut Self::bishop_moves(bb, board, side));
     moves.append(&mut Self::rook_moves(bb, board, side));
+    // println!("Queen Moves: {:#?}", moves);
     moves
   }
 
@@ -465,7 +465,7 @@ impl MoveGen {
       },
     );
 
-    for s in 0..63 {
+    for s in 0..64 {
       let position_bb = BitBoard::from_pos(s);
 
       if position_bb & kings != BitBoard(0) {
