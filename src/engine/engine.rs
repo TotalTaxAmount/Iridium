@@ -33,53 +33,58 @@ impl Engine {
     score
   }
 
-  pub fn pvs(board: Board, depth: u8, alpha: f32, beta: f32, side: Sides) -> (f32, Line) {
-    fn pvs_internal(
-      board: &Board, depth: u8, mut alpha: f32, beta: f32, side: Sides, f: bool,
-    ) -> (f32, Line) {
+  pub fn pvs(board: Board, alpha: f32, beta: f32, depth: u8) -> f32 {
+    fn pvs_internal(board: Board, mut alpha: f32, beta: f32, depth: u8, f: bool) -> f32 {
       if depth == 0 {
-        return (
-          self::Engine::evaluate(*board) * if side == Sides::WHITE { 1.0 } else { -1.0 },
-          Line::new(),
-        );
-      };
+        return Engine::evaluate(board);
+      }
 
-      let mut best_line = Line::new();
+      for m in MoveGen::gen_moves(board, board.turn, true) {
+        let mut clone_board = board.clone();
+        clone_board.apply_move(m.clone());
 
-      for m in MoveGen::gen_moves(*board, board.turn, true) {
-        let mut clone = board.clone();
-        clone.apply_move(m);
-
-        let mut score = 0.0;
-        let mut curr_line = Line::new();
+        let mut score;
 
         if f {
-          (score, curr_line) = pvs_internal(&clone, depth - 1, -beta, -alpha, !side, false);
-          score = -score;
+          score = pvs_internal(clone_board, -beta, -alpha, depth - 1, false);
         } else {
-          (score, curr_line) = pvs_internal(&clone, depth - 1, -alpha - 1.0, -alpha, !side, false);
-          score = -score;
+          score = -Engine::zw_search(clone_board, -alpha, depth - 1);
+          if score > alpha {
+            score = -pvs_internal(clone_board, -beta, -alpha, depth - 1, false);
+          }
         }
 
-        if alpha < score && score < beta {
-          (score, curr_line) = pvs_internal(&clone, depth - 1, -beta, -alpha, !side, false);
-          score = -score;
+        if score >= beta {
+          return beta;
         }
 
         if score > alpha {
           alpha = score;
-          best_line = curr_line.clone();
-          best_line.add_move(m.clone());
-        }
-
-        if alpha >= beta {
-          break;
         }
       }
 
-      (alpha, best_line)
+      println!("PVS: Depth: {} Alpha: {} Beta: {}", depth, alpha, beta);
+      alpha
     }
 
-    pvs_internal(&board, depth, alpha, beta, side, true)
+    pvs_internal(board, alpha, beta, depth, true)
+  }
+
+  pub fn zw_search(board: Board, beta: f32, depth: u8) -> f32 {
+    if depth == 0 {
+      return Self::evaluate(board);
+    }
+
+    for m in MoveGen::gen_moves(board, board.turn, true) {
+      let mut clone_board = board.clone();
+      clone_board.apply_move(m.clone());
+
+      let score = -Self::zw_search(clone_board, 1.0 - beta, depth - 1);
+
+      if score >= beta {
+        return beta;
+      }
+    }
+    return beta - 1.0;
   }
 }

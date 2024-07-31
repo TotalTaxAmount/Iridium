@@ -1,6 +1,6 @@
 use std::{cmp::min, vec};
 
-use crate::structs::{print_bitboard, BitBoard, Board, Move, Pieces, Sides};
+use crate::structs::{BitBoard, Board, Move, Pieces, Sides};
 
 pub struct MoveGen;
 impl MoveGen {
@@ -445,7 +445,7 @@ impl MoveGen {
     let mut moves: Vec<Move> = vec![];
     moves.append(&mut Self::bishop_moves(bb, board, side));
     moves.append(&mut Self::rook_moves(bb, board, side));
-    // println!("Queen Moves: {:#?}", moves);
+    // println!("Queen Moves: {:#?} \n Len: {}", moves, moves.len());
     moves
   }
 

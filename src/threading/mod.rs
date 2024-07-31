@@ -30,6 +30,7 @@ impl ThreadPool {
     let moves: Vec<Move> = MoveGen::gen_moves(board.clone(), side, true);
     let num_moves = moves.len() as u8;
     let mut best_move: Option<(Move, Line)> = None;
+    let mut best_eval = -INFINITY;
 
     let thread_limit = self.limit.min(num_moves);
 
@@ -51,16 +52,8 @@ impl ThreadPool {
         for m in chunk_moves {
           let mut clone_board = clone_board.clone();
           clone_board.apply_move(m.clone());
-          // let eval = if side == Sides::WHITE {
-          //   Engine::alpha_beta_max(clone_board, side, -INFINITY, INFINITY, depth - 1)
-          // } else {
-          //   Engine::alpha_beta_min(clone_board, side, -INFINITY, INFINITY, depth - 1)
-          // };
-          let (eval, line) = Engine::pvs(clone_board, depth - 1, -INFINITY, INFINITY, side);
 
-          let mut current_line = Line::new();
-          current_line.add_move(m.clone());
-          current_line.extend(&line);
+          let eval = -Engine::pvs(clone_board, -INFINITY, INFINITY, depth - 1);
 
           println!(
             "{} - {}{} - {:?}",
@@ -73,10 +66,9 @@ impl ThreadPool {
           if eval > best_eval {
             best_eval = eval;
             best_move = m;
-            best_line = current_line;
           }
         }
-        (best_eval, best_move, best_line)
+        (best_eval, best_move, Line::new())
       });
 
       match handle {
@@ -84,8 +76,6 @@ impl ThreadPool {
         Err(_) => {}
       }
     }
-
-    let mut best_eval = -INFINITY;
 
     for handle in self.threads.drain(..) {
       if let Ok((eval, m, line)) = handle.join() {
@@ -97,6 +87,6 @@ impl ThreadPool {
     }
 
     println!("Best eval: {}, Best Moves {:?}", best_eval, best_move);
-    (best_move)
+    best_move
   }
 }
