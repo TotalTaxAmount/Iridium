@@ -4,7 +4,7 @@ use parsers::{
   position::Position,
   time::{Constraints, Time},
 };
-use std::process::exit;
+use std::{f32::INFINITY, process::exit};
 use structs::{print_bitboard, Board};
 use threading::ThreadPool;
 use Iridium::pos_to_alph;
@@ -56,22 +56,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let moves = MoveGen::gen_moves(board, board.turn, true);
 
         println!("possible moves {}", moves.len());
-        let best_move = match thread_pool.search(board, board.turn, 3) {
+        let best_move = match thread_pool.search(board, board.turn, 2) {
           Some(m) => m,
           None => continue,
         };
         println!("{:?} {}", board.turn, board.full_moves);
-        board.apply_move(best_move);
+        board.apply_move(best_move.0);
         println!("info score cp {}", Engine::evaluate(board));
+        println!("info {}", best_move.1);
         println!(
           "bestmove {}{}",
-          pos_to_alph(best_move.start)?,
-          pos_to_alph(best_move.dest)?
+          pos_to_alph(best_move.0.start)?,
+          pos_to_alph(best_move.0.dest)?
         );
       }
-      "stop" => {
-       
-      }
+      "stop" => {}
       "ponder" => {}
       "ponderhint" => {}
       "pb" => {
@@ -83,7 +82,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         print_bitboard(board.get_sides()[1])
       }
       "test" => {
-        println!("{:?}", board.get_sides());
+        println!(
+          "{:?}",
+          Engine::pvs(board, 2, -INFINITY, INFINITY, structs::Sides::WHITE)
+        );
       }
       "quit" => exit(0),
       _ => println!("Error unknown command: {}", command),

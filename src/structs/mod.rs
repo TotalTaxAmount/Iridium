@@ -1,10 +1,11 @@
+use core::fmt;
 use std::{
-  borrow::BorrowMut,
-  default,
   fmt::Display,
   ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr},
-  slice::SliceIndex,
+  vec,
 };
+
+use Iridium::pos_to_alph;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[repr(usize)]
@@ -287,6 +288,40 @@ pub struct Move {
   pub start: u8,
   pub dest: u8,
   pub capture: Option<Pieces>,
+}
+
+#[derive(Clone, Debug)]
+pub struct Line {
+  moves: Vec<Move>,
+}
+
+impl Line {
+  pub fn new() -> Self {
+    Self { moves: vec![] }
+  }
+
+  pub fn add_move(&mut self, m: Move) {
+    self.moves.push(m);
+  }
+
+  pub fn extend(&mut self, line: &Self) {
+    self.moves.extend_from_slice(&line.moves);
+  }
+}
+
+impl fmt::Display for Line {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "currline ");
+    for m in self.moves.clone() {
+      write!(
+        f,
+        "{}{} ",
+        pos_to_alph(m.start).unwrap(),
+        pos_to_alph(m.dest).unwrap()
+      );
+    }
+    write!(f, "")
+  }
 }
 
 pub fn print_bitboard(bitboard: BitBoard) {

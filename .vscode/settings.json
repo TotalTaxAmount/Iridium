@@ -6,6 +6,7 @@
     "bitcount",
     "bmove",
     "btime",
+    "curr",
     "dists",
     "fullmoves",
     "halfmoves",

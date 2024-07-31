@@ -1,9 +1,7 @@
-use std::{cmp::max, env::var, f32::INFINITY};
-
 use crate::{
   lib::bitcount,
   movegen::movegen::MoveGen,
-  structs::{print_bitboard, Board, Pieces, Sides},
+  structs::{print_bitboard, Board, Line, Pieces, Sides},
 };
 
 pub struct Engine;
@@ -35,116 +33,53 @@ impl Engine {
     score
   }
 
-  // pub fn bestmove(board: Board, side: Sides, depth: u8) -> Option<Move> {
-  //   let moves = MoveGen::gen_moves(board, side, true);
+  pub fn pvs(board: Board, depth: u8, alpha: f32, beta: f32, side: Sides) -> (f32, Line) {
+    fn pvs_internal(
+      board: &Board, depth: u8, mut alpha: f32, beta: f32, side: Sides, f: bool,
+    ) -> (f32, Line) {
+      if depth == 0 {
+        return (
+          self::Engine::evaluate(*board) * if side == Sides::WHITE { 1.0 } else { -1.0 },
+          Line::new(),
+        );
+      };
 
-  //   let mut best_move = None;
-  //   let mut best_eval = if side == Sides::WHITE {
-  //     -INFINITY
-  //   } else {
-  //     INFINITY
-  //   };
+      let mut best_line = Line::new();
 
-  //   for m in moves {
-  //     let mut clone_board = board.clone();
-  //     clone_board.apply_move(m);
-  //     let eval = Self::alpha_beta_max(clone_board, side, -INFINITY, INFINITY, depth);
-  //     println!("eval: {}", eval);
-  //     if (side == Sides::WHITE && eval > best_eval) || (side == Sides::BLACK && eval < best_eval) {
-  //       best_eval = eval;
-  //       best_move = Some(m);
-  //     }
-  //   }
+      for m in MoveGen::gen_moves(*board, board.turn, true) {
+        let mut clone = board.clone();
+        clone.apply_move(m);
 
-  //   println!("Best Move: {:?}, Best Evaluation: {}", best_move, best_eval);
-  //   best_move
-  // }
+        let mut score = 0.0;
+        let mut curr_line = Line::new();
 
-  // pub fn alpha_beta_max(board: Board, mut alpha: f32, beta: f32, depth: u8) -> f32 {
-  //   if depth == 0 {
-  //     return Self::evaluate(board);
-  //   }
-
-  //   let mut best_value = -INFINITY;
-  //   for m in MoveGen::gen_moves(board, board.turn, true) {
-  //     let mut clone_board = board.clone();
-  //     clone_board.apply_move(m);
-  //     let score = Self::alpha_beta_min(clone_board, alpha, beta, depth - 1);
-
-  //     if score > best_value {
-  //       best_value = score;
-  //       if score > alpha {
-  //         alpha = score;
-  //       }
-  //     }
-  //     if score >= beta {
-  //       return score;
-  //     }
-  //   }
-
-  //   best_value
-  // }
-
-  // pub fn alpha_beta_min(board: Board, alpha: f32, mut beta: f32, depth: u8) -> f32 {
-  //   if depth == 0 {
-  //     return -Self::evaluate(board);
-  //   }
-
-  //   let mut best_value = INFINITY;
-  //   for m in MoveGen::gen_moves(board, board.turn, true) {
-  //     let mut clone_board = board.clone();
-  //     clone_board.apply_move(m);
-  //     let score = Self::alpha_beta_max(clone_board, alpha, beta, depth - 1);
-
-  //     if score < best_value {
-  //       best_value = score;
-  //       if score < beta {
-  //         beta = score;
-  //       }
-  //     }
-  //     if score <= alpha {
-  //       return score;
-  //     }
-  //   }
-
-  //   best_value
-  // }
-
-  pub fn nega_scout(board: Board, depth: u8, mut alpha: f32, beta: f32) -> f32 {
-    if depth == 0 {
-      // let color = if board.turn == Sides::WHITE { 1.0 } else { -1.0 };
-      return Self::evaluate(board);
-    }
-
-    let mut best_value = -INFINITY;
-    let mut n = beta;
-
-    for m in MoveGen::gen_moves(board, board.turn, true) {
-      let mut clone_board = board.clone();
-      clone_board.apply_move(m);
-      // println!();
-      // print_bitboard(clone_board.bb_sides[0] | clone_board.bb_sides[1]);
-
-      let score = -Self::nega_scout(clone_board, depth - 1, -n, -alpha);
-
-      if score > best_value {
-        if alpha < score && score < beta {
-          best_value = score.max(best_value);
+        if f {
+          (score, curr_line) = pvs_internal(&clone, depth - 1, -beta, -alpha, !side, false);
+          score = -score;
         } else {
-          best_value = -Self::nega_scout(clone_board, depth - 1, -beta, -score);
+          (score, curr_line) = pvs_internal(&clone, depth - 1, -alpha - 1.0, -alpha, !side, false);
+          score = -score;
+        }
+
+        if alpha < score && score < beta {
+          (score, curr_line) = pvs_internal(&clone, depth - 1, -beta, -alpha, !side, false);
+          score = -score;
+        }
+
+        if score > alpha {
+          alpha = score;
+          best_line = curr_line.clone();
+          best_line.add_move(m.clone());
+        }
+
+        if alpha >= beta {
+          break;
         }
       }
-      if score > alpha {
-        alpha = score;
-      };
 
-      if alpha >= beta {
-        return alpha;
-      };
-
-      n = alpha + 1.0;
+      (alpha, best_line)
     }
 
-    best_value
+    pvs_internal(&board, depth, alpha, beta, side, true)
   }
 }
