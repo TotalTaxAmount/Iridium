@@ -36,6 +36,8 @@ impl ThreadPool {
 
     let chuck_size = (moves.len() as f32 / thread_limit as f32).ceil() as usize;
 
+    println!("{:?}", side);
+
     for (i, chunk) in moves.chunks(chuck_size).map(|x| x.to_vec()).enumerate() {
       let clone_board = board.clone();
 
@@ -51,10 +53,10 @@ impl ThreadPool {
 
         for m in chunk_moves {
           let mut clone_board = clone_board.clone();
-          clone_board.apply_move(m.clone());
+          clone_board.apply_move(m);
 
-          let eval = -Engine::pvs(clone_board, -INFINITY, INFINITY, depth - 1);
-
+          let eval: f32 = -Engine::pvs(clone_board, -INFINITY, INFINITY, depth - 1);
+    
           println!(
             "{} - {}{} - {:?}",
             eval,

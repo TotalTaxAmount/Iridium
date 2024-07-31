@@ -259,11 +259,13 @@ impl Board {
 
     self.bb_sides = self.get_sides();
     self.full_moves += 1;
-    if self.full_moves % 2 == 0 {
-      self.turn = Sides::WHITE;
-    } else {
-      self.turn = Sides::BLACK;
-    }
+    //println!("{}", self.full_moves);
+    // if self.full_moves % 2 == 0 {
+    //   self.turn = Sides::WHITE;
+    // } else {
+    //   self.turn = Sides::BLACK;
+    // }
+    self.turn = !self.turn;
   }
 
   pub fn apply_moves(&mut self, moves: Vec<Move>) {

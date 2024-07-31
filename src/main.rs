@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let mut board: Board = Board::default();
   let mut constraints: Constraints;
 
-  let mut thread_pool = ThreadPool::new(30);
+  let mut thread_pool = ThreadPool::new(1);
 
   loop {
     let input = lib::get_input("");
@@ -82,7 +82,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         print_bitboard(board.get_sides()[1])
       }
       "test" => {
-        MoveGen::gen_moves(board, board.turn, false);
+        let test = Engine::pvs(board, -INFINITY, INFINITY, 2);
+
+        println!("Test: {}", test);
       }
       "quit" => exit(0),
       _ => println!("Error unknown command: {}", command),

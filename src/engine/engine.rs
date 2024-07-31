@@ -30,61 +30,26 @@ impl Engine {
         * (MoveGen::gen_moves(board, Sides::WHITE, true).len() as f32
           - MoveGen::gen_moves(board, Sides::BLACK, true).len() as f32);
 
-    score
+    score * if board.turn == Sides::WHITE { 1.0 } else { -1.0 }
   }
 
-  pub fn pvs(board: Board, alpha: f32, beta: f32, depth: u8) -> f32 {
-    fn pvs_internal(board: Board, mut alpha: f32, beta: f32, depth: u8, f: bool) -> f32 {
-      if depth == 0 {
-        return Engine::evaluate(board);
-      }
-
-      for m in MoveGen::gen_moves(board, board.turn, true) {
-        let mut clone_board = board.clone();
-        clone_board.apply_move(m.clone());
-
-        let mut score;
-
-        if f {
-          score = pvs_internal(clone_board, -beta, -alpha, depth - 1, false);
-        } else {
-          score = -Engine::zw_search(clone_board, -alpha, depth - 1);
-          if score > alpha {
-            score = -pvs_internal(clone_board, -beta, -alpha, depth - 1, false);
-          }
-        }
-
-        if score >= beta {
-          return beta;
-        }
-
-        if score > alpha {
-          alpha = score;
-        }
-      }
-
-      println!("PVS: Depth: {} Alpha: {} Beta: {}", depth, alpha, beta);
-      alpha
-    }
-
-    pvs_internal(board, alpha, beta, depth, true)
-  }
-
-  pub fn zw_search(board: Board, beta: f32, depth: u8) -> f32 {
+  pub fn pvs(board: Board, mut alpha: f32, beta: f32, depth: u8) -> f32 {
     if depth == 0 {
-      return Self::evaluate(board);
+      return Engine::evaluate(board);
     }
 
     for m in MoveGen::gen_moves(board, board.turn, true) {
-      let mut clone_board = board.clone();
-      clone_board.apply_move(m.clone());
+      let mut c_board = board.clone();
+      c_board.apply_move(m);
+      println!("{:?}", c_board.turn);
 
-      let score = -Self::zw_search(clone_board, 1.0 - beta, depth - 1);
+      let score = -Engine::pvs(c_board, -beta, -alpha, depth - 1);
 
-      if score >= beta {
-        return beta;
+      if score > alpha {
+        alpha = score;
       }
     }
-    return beta - 1.0;
+
+    return alpha;
   }
 }
