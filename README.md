@@ -4,6 +4,8 @@ Iridium is a chess bot written in Rust.
 
 **Features**:
 - UCI Support
+- Move generation
+- Move evaluation (going to be PVS soon)
 - TODO!
 
 How to run
