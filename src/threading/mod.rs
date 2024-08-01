@@ -30,7 +30,11 @@ impl ThreadPool {
     let moves: Vec<Move> = MoveGen::gen_moves(board.clone(), side, true);
     let num_moves = moves.len() as u8;
     let mut best_move: Option<(Move, Line)> = None;
-    let mut best_eval = -INFINITY;
+    let mut best_eval = if side == Sides::WHITE {
+      -INFINITY
+    } else {
+      INFINITY
+    };
 
     let thread_limit = self.limit.min(num_moves);
 
@@ -44,7 +48,11 @@ impl ThreadPool {
       let builder = Builder::new().name(format!("Eval thread builder {}", i).into());
 
       let handle = builder.spawn(move || {
-        let mut best_eval = -INFINITY;
+        let mut best_eval = if side == Sides::WHITE {
+          -INFINITY
+        } else {
+          INFINITY
+        };
 
         let mut best_move = chunk[0];
         let mut best_line = Line::new();
@@ -63,9 +71,13 @@ impl ThreadPool {
             m.capture
           );
 
-          if eval > best_eval {
+          if (side == Sides::WHITE && eval > best_eval)
+            || (side == Sides::BLACK && eval < best_eval)
+          {
             best_eval = eval;
             best_move = m;
+          } else {
+            // println!("{:?} -- {} | {} {}", side, eval, best_eval, eval < best_eval);
           }
         }
         (best_eval, best_move, Line::new())
@@ -79,7 +91,8 @@ impl ThreadPool {
 
     for handle in self.threads.drain(..) {
       if let Ok((eval, m, line)) = handle.join() {
-        if eval > best_eval {
+        if (side == Sides::WHITE && eval > best_eval) || (side == Sides::BLACK && eval < best_eval)
+        {
           best_eval = eval;
           best_move = Some((m, line));
         }

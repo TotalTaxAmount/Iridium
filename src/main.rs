@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let mut board: Board = Board::default();
   let mut constraints: Constraints;
 
-  let mut thread_pool = ThreadPool::new(15);
+  let mut thread_pool = ThreadPool::new(16);
 
   loop {
     let input = lib::get_input("");
@@ -56,13 +56,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let moves = MoveGen::gen_moves(board, board.turn, true);
 
         println!("possible moves {}", moves.len());
-        let best_move = match thread_pool.search(board, board.turn, 2) {
+        let best_move = match thread_pool.search(board, board.turn, 4) {
           Some(m) => m,
           None => continue,
         };
         println!("{:?} {}", board.turn, board.full_moves);
         board.apply_move(best_move.0);
-        println!("info score cp {}", Engine::evaluate(board));
+        println!("info score cp {}", Engine::evaluate(board) * 100.0);
         println!("info {}", best_move.1);
         println!(
           "bestmove {}{}",
