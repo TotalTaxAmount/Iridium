@@ -1,5 +1,7 @@
 use std::{cmp::min, vec};
 
+use Iridium::pos_to_alph;
+
 use crate::structs::{BitBoard, Board, Move, Pieces, Sides};
 
 pub struct MoveGen;
@@ -135,33 +137,31 @@ impl MoveGen {
         }
 
         if capture_squares.0 <= 63 {
-          if edge_dists.1 == 0 {
-            continue;
-          }
+          if edge_dists.1 != 0 {
+            let capture = Self::check_capture(capture_squares.0, board, side);
 
-          let capture = Self::check_capture(capture_squares.0, board, side);
-
-          if capture.is_some() {
-            moves.push(Move {
-              start: s,
-              dest: capture_squares.0,
-              capture,
-            })
+            if capture.is_some() {
+              //println!("{} -> {} cap 0 ed: {:?}", pos_to_alph(s).unwrap(), pos_to_alph(capture_squares.0).unwrap(), edge_dists);
+              moves.push(Move {
+                start: s,
+                dest: capture_squares.0,
+                capture,
+              })
+            }
           }
         }
 
         if capture_squares.1 <= 63 {
-          if edge_dists.0 == 0 {
-            continue;
-          }
-
-          let capture = Self::check_capture(capture_squares.1, board, side);
-          if capture.is_some() {
-            moves.push(Move {
-              start: s,
-              dest: capture_squares.1,
-              capture,
-            })
+          if edge_dists.0 != 0 {
+            let capture = Self::check_capture(capture_squares.1, board, side);
+            if capture.is_some() {
+              //println!("{} -> {} cap 1 ed: {:?}", pos_to_alph(s).unwrap(), pos_to_alph(capture_squares.1).unwrap(), edge_dists);
+              moves.push(Move {
+                start: s,
+                dest: capture_squares.1,
+                capture,
+              })
+            }
           }
         }
       }

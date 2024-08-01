@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let mut board: Board = Board::default();
   let mut constraints: Constraints;
 
-  let mut thread_pool = ThreadPool::new(1);
+  let mut thread_pool = ThreadPool::new(15);
 
   loop {
     let input = lib::get_input("");

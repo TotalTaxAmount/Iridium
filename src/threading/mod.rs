@@ -41,8 +41,6 @@ impl ThreadPool {
     for (i, chunk) in moves.chunks(chuck_size).map(|x| x.to_vec()).enumerate() {
       let clone_board = board.clone();
 
-      let chunk_moves = chunk.to_vec();
-
       let builder = Builder::new().name(format!("Eval thread builder {}", i).into());
 
       let handle = builder.spawn(move || {
@@ -51,12 +49,12 @@ impl ThreadPool {
         let mut best_move = chunk[0];
         let mut best_line = Line::new();
 
-        for m in chunk_moves {
+        for m in chunk {
           let mut clone_board = clone_board.clone();
           clone_board.apply_move(m);
 
           let eval: f32 = -Engine::pvs(clone_board, -INFINITY, INFINITY, depth - 1);
-    
+
           println!(
             "{} - {}{} - {:?}",
             eval,

@@ -30,7 +30,12 @@ impl Engine {
         * (MoveGen::gen_moves(board, Sides::WHITE, true).len() as f32
           - MoveGen::gen_moves(board, Sides::BLACK, true).len() as f32);
 
-    score * if board.turn == Sides::WHITE { 1.0 } else { -1.0 }
+    score
+      * if board.turn == Sides::WHITE {
+        1.0
+      } else {
+        -1.0
+      }
   }
 
   pub fn pvs(board: Board, mut alpha: f32, beta: f32, depth: u8) -> f32 {
@@ -41,7 +46,6 @@ impl Engine {
     for m in MoveGen::gen_moves(board, board.turn, true) {
       let mut c_board = board.clone();
       c_board.apply_move(m);
-      println!("{:?}", c_board.turn);
 
       let score = -Engine::pvs(c_board, -beta, -alpha, depth - 1);
 
