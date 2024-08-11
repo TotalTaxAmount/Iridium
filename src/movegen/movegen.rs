@@ -8,7 +8,7 @@ pub struct MoveGen;
 impl MoveGen {
   const ROW: i8 = 8;
 
-  pub fn gen_moves(board: Board, side: Sides, checks: bool) -> Vec<Move> {
+  pub fn gen_moves(board: Board, side: Sides, legal_check: bool) -> Vec<Move> {
     let mut moves: Vec<Move> = vec![];
 
     for (piece, bb) in board.bb_pieces[side as usize].into_iter().enumerate() {
@@ -24,7 +24,7 @@ impl MoveGen {
       }
     }
 
-    if checks {
+    if legal_check {
       let mut legal_moves: Vec<Move> = vec![];
       for m in moves {
         let mut clone = board.clone();
@@ -37,6 +37,7 @@ impl MoveGen {
         for op_move in opside_moves {
           if op_move.capture == Some(Pieces::KING) {
             is_legal = false;
+            continue;
           }
         }
 

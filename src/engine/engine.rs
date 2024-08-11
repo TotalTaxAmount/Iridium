@@ -1,10 +1,14 @@
+use std::arch::x86_64::_CMP_FALSE_OS;
+
 use crate::{
   lib::bitcount,
   movegen::movegen::MoveGen,
   structs::{print_bitboard, Board, Line, Move, Pieces, Sides},
 };
 
-pub struct Engine;
+pub struct Engine {
+  pub current_depth: u8
+}
 impl Engine {
   // Piece square tables
   const MG_PAWN_TABLE: [i16; 64] = [
@@ -44,6 +48,10 @@ impl Engine {
     14,
   ];
 
+  pub fn new() -> Self {
+    Self { current_depth: 0 }
+  }
+
   pub fn evaluate(board: Board) -> f32 {
     let bb_pieces = board.bb_pieces;
     let mut score: f32 = 0.0;
@@ -71,83 +79,64 @@ impl Engine {
       * (MoveGen::gen_moves(board, Sides::WHITE, true).len() as f32
         - MoveGen::gen_moves(board, Sides::BLACK, true).len() as f32);
 
-    for side in 0..2 {
-      for piece in 0..6 {
-        let mut bb = bb_pieces[side][piece];
+    // for side in 0..2 {
+    //   for piece in 0..6 {
+    //     let mut bb = bb_pieces[side][piece];
 
-        while bb.0 != 0 {
-          let square = bb.0.trailing_zeros() as usize;
-          bb.0 &= bb.0 - 1;
+    //     while bb.0 != 0 {
+    //       let square = bb.0.trailing_zeros() as usize;
+    //       bb.0 &= bb.0 - 1;
 
-          let table_index = if side == 0 { square } else { 63 - square };
-          let value = match Pieces::from_usize(piece) {
-            Some(Pieces::PAWN) => Engine::MG_PAWN_TABLE[table_index],
-            Some(Pieces::KNIGHT) => Engine::MG_KNIGHT_TABLE[table_index],
-            Some(Pieces::BISHOP) => Engine::MG_BISHOP_TABLE[table_index],
-            Some(Pieces::ROOK) => Engine::MG_ROOK_TABLE[table_index],
-            Some(Pieces::QUEEN) => Engine::MG_QUEEN_TABLE[table_index],
-            Some(Pieces::KING) => Engine::MG_KING_TABLE[table_index],
-            None => 0,
-          };
+    //       let table_index = if side == 0 { square } else { 63 - square };
+    //       let value = match Pieces::from_usize(piece) {
+    //         Some(Pieces::PAWN) => Engine::MG_PAWN_TABLE[table_index],
+    //         Some(Pieces::KNIGHT) => Engine::MG_KNIGHT_TABLE[table_index],
+    //         Some(Pieces::BISHOP) => Engine::MG_BISHOP_TABLE[table_index],
+    //         Some(Pieces::ROOK) => Engine::MG_ROOK_TABLE[table_index],
+    //         Some(Pieces::QUEEN) => Engine::MG_QUEEN_TABLE[table_index],
+    //         Some(Pieces::KING) => Engine::MG_KING_TABLE[table_index],
+    //         None => 0,
+    //       };
 
-          score += if side == 0 { value } else { -value } as f32 * 0.004
-        }
-      }
-    }
+    //       score += if side == 0 { value } else { -value } as f32 * 0.004
+    //     }
+    //   }
+    // }
 
     score
   }
 
-  pub fn pvs(board: Board, mut alpha: f32, beta: f32, depth: u8) -> f32 {
+  pub fn pvs(&mut self, board: Board, mut alpha: f32, beta: f32, depth: u8) -> f32 {
     if depth == 0 {
       return Engine::quiesce(board, alpha, beta);
     }
-
-    let mut b_search_pv = true;
+    
+    self.current_depth = self.current_depth + 1;
 
     for m in MoveGen::gen_moves(board, board.turn, true) {
       let mut c_board = board.clone();
       c_board.apply_move(m);
-
+      
       let mut score;
-
-      if b_search_pv {
-        score = -Self::pvs(c_board, -beta, -alpha, depth - 1);
+      if self.current_depth <= 1 {
+        score = -self.pvs(c_board, -beta, -alpha, depth - 1);
       } else {
-        score = -Self::zw_search(c_board, -alpha, depth - 1);
-        if score > alpha {
-          score = -Self::pvs(c_board, -beta, beta - alpha, depth - 1);
-        }
+        score = -self.pvs(c_board, -alpha - 1.0, -alpha, depth - 1);
+
+        if score > alpha && beta - alpha > 1.0 {
+          score = -self.pvs(c_board, -beta, -alpha, depth - 1);
+        } 
       }
+
       if score >= beta {
         return beta;
       }
       if score > alpha {
         alpha = score;
-        b_search_pv = false;
       }
     }
 
     return alpha;
-  }
-
-  fn zw_search(board: Board, beta: f32, depth: u8) -> f32 {
-    if depth == 0 {
-      return Self::quiesce(board, beta - 1.0, beta);
-    }
-
-    for m in MoveGen::gen_moves(board, board.turn, true) {
-      let mut clone_board = board.clone();
-      clone_board.apply_move(m);
-
-      let score = -Self::zw_search(clone_board, 1.0 - beta, depth - 1);
-
-      if score >= beta {
-        return beta;
-      }
-    }
-
-    return beta - 1.0;
   }
 
   fn quiesce(board: Board, mut alpha: f32, beta: f32) -> f32 {

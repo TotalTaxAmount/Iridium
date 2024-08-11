@@ -18,7 +18,7 @@ mod threading;
 
 fn ucimode() {
   // Identification
-  println!("id name {}", lib::NAME);
+  println!("id name {} (commit: {})", lib::NAME, env!("GIT_HASH"));
   println!("id author {}", lib::AUTHOR);
   // Options
 
@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let mut board: Board = Board::default();
   let mut constraints: Constraints;
 
-  let mut thread_pool = ThreadPool::new(16);
+  let mut thread_pool = ThreadPool::new(25);
 
   loop {
     let input = lib::get_input("");
@@ -56,7 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let moves = MoveGen::gen_moves(board, board.turn, true);
 
         println!("possible moves {}", moves.len());
-        let best_move = match thread_pool.search(board, board.turn, 4) {
+        let best_move = match thread_pool.search(board, board.turn, 2) {
           Some(m) => m,
           None => continue,
         };
@@ -82,9 +82,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         print_bitboard(board.get_sides()[1])
       }
       "test" => {
-        let test = Engine::pvs(board, -INFINITY, INFINITY, 2);
+        // let test = Engine::pvs(board, -INFINITY, INFINITY, 2);
 
-        println!("Test: {}", test);
+        // println!("Test: {}", test);
       }
       "quit" => exit(0),
       _ => println!("Error unknown command: {}", command),

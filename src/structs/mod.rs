@@ -1,6 +1,6 @@
 use core::fmt;
 use std::{
-  fmt::Display,
+  fmt::{write, Display},
   ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr},
   vec,
 };
@@ -292,6 +292,12 @@ pub struct Move {
   pub capture: Option<Pieces>,
 }
 
+impl fmt::Display for Move {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}{}", pos_to_alph(self.start).unwrap(), pos_to_alph(self.dest).unwrap())
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Line {
   moves: Vec<Move>,
@@ -313,9 +319,9 @@ impl Line {
 
 impl fmt::Display for Line {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "currline ");
+    let _ = write!(f, "currline ");
     for m in self.moves.clone() {
-      write!(
+      let _= write!(
         f,
         "{}{} ",
         pos_to_alph(m.start).unwrap(),

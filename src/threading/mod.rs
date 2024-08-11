@@ -61,14 +61,17 @@ impl ThreadPool {
           let mut clone_board = clone_board.clone();
           clone_board.apply_move(m);
 
-          let eval: f32 = -Engine::pvs(clone_board, -INFINITY, INFINITY, depth - 1);
+          let mut engine = Engine::new();
+
+          let eval = -engine.pvs(clone_board, -INFINITY, INFINITY, depth - 1);
 
           println!(
-            "{} - {}{} - {:?}",
+            "{} - {}{} - {:?} :: calls {}",
             eval,
             pos_to_alph(m.start).unwrap(),
             pos_to_alph(m.dest).unwrap(),
-            m.capture
+            m.capture,
+            engine.current_depth
           );
 
           if (side == Sides::WHITE && eval > best_eval)
