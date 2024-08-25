@@ -30,11 +30,12 @@ impl ThreadPool {
     let moves: Vec<Move> = MoveGen::gen_moves(board.clone(), side, true);
     let num_moves = moves.len() as u8;
     let mut best_move: Option<(Move, Line)> = None;
-    let mut best_eval = if side == Sides::WHITE {
-      -INFINITY
-    } else {
-      INFINITY
-    };
+    // let mut best_eval = if side == Sides::WHITE {
+    //   -INFINITY
+    // } else {
+    //   INFINITY
+    // };
+    let mut best_eval = -INFINITY;
 
     let thread_limit = self.limit.min(num_moves);
 
@@ -48,11 +49,13 @@ impl ThreadPool {
       let builder = Builder::new().name(format!("Eval thread builder {}", i).into());
 
       let handle = builder.spawn(move || {
-        let mut best_eval = if side == Sides::WHITE {
-          -INFINITY
-        } else {
-          INFINITY
-        };
+        // let mut best_eval = if side == Sides::WHITE {
+        //   -INFINITY
+        // } else {
+        //   INFINITY
+        // };
+
+        let mut best_eval = -INFINITY;
 
         let mut best_move = chunk[0];
         let mut best_line = Line::new();
@@ -63,20 +66,24 @@ impl ThreadPool {
 
           let mut engine = Engine::new();
 
-          let eval = -engine.pvs(clone_board, -INFINITY, INFINITY, depth - 1);
+          let pvs = engine.pvs(clone_board, -INFINITY, INFINITY, depth - 1, Line::new());
+          let eval = -pvs.0;
+          let line = pvs.1;
 
           println!(
-            "{} - {}{} - {:?} :: calls {}",
+            "{} - {}{} - {:?} :: calls {}, line: {}",
             eval,
             pos_to_alph(m.start).unwrap(),
             pos_to_alph(m.dest).unwrap(),
             m.capture,
-            engine.current_depth
+            engine.current_depth,
+            line
           );
 
-          if (side == Sides::WHITE && eval > best_eval)
-            || (side == Sides::BLACK && eval < best_eval)
-          {
+          // if (side == Sides::WHITE && eval > best_eval)
+          //   || (side == Sides::BLACK && eval < best_eval)
+          // {
+          if eval > best_eval {
             best_eval = eval;
             best_move = m;
           } else {
@@ -94,7 +101,8 @@ impl ThreadPool {
 
     for handle in self.threads.drain(..) {
       if let Ok((eval, m, line)) = handle.join() {
-        if (side == Sides::WHITE && eval > best_eval) || (side == Sides::BLACK && eval < best_eval)
+        // if (side == Sides::WHITE && eval > best_eval) || (side == Sides::BLACK && eval < best_eval)
+        if eval > best_eval
         {
           best_eval = eval;
           best_move = Some((m, line));

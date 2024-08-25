@@ -1,4 +1,4 @@
-use std::arch::x86_64::_CMP_FALSE_OS;
+use std::{arch::x86_64::_CMP_FALSE_OS, thread::ScopedJoinHandle};
 
 use crate::{
   lib::bitcount,
@@ -7,7 +7,7 @@ use crate::{
 };
 
 pub struct Engine {
-  pub current_depth: u8
+  pub current_depth: u8,
 }
 impl Engine {
   // Piece square tables
@@ -106,37 +106,47 @@ impl Engine {
     score
   }
 
-  pub fn pvs(&mut self, board: Board, mut alpha: f32, beta: f32, depth: u8) -> f32 {
+  pub fn pvs(
+    &mut self, board: Board, mut alpha: f32, beta: f32, depth: u8, mut line: Line,
+  ) -> (f32, Line) {
     if depth == 0 {
-      return Engine::quiesce(board, alpha, beta);
+      return (
+        Engine::quiesce(board, alpha, beta) * if board.turn == Sides::WHITE { 1.0 } else { -1.0 },
+        line.clone(),
+      );
     }
-    
+
     self.current_depth = self.current_depth + 1;
 
     for m in MoveGen::gen_moves(board, board.turn, true) {
+      let mut c_line = line.clone();
       let mut c_board = board.clone();
       c_board.apply_move(m);
-      
+      c_line.add_move(m);
+
       let mut score;
       if self.current_depth <= 1 {
-        score = -self.pvs(c_board, -beta, -alpha, depth - 1);
+        // First Move
+        let pvs = self.pvs(c_board, -beta, -alpha, depth - 1, c_line.clone());
+        score = -pvs.0;
       } else {
-        score = -self.pvs(c_board, -alpha - 1.0, -alpha, depth - 1);
-
+        let pvs = self.pvs(c_board, -alpha - 1.0, -alpha, depth - 1, c_line.clone());
+        score = -pvs.0;
         if score > alpha && beta - alpha > 1.0 {
-          score = -self.pvs(c_board, -beta, -alpha, depth - 1);
-        } 
+          let pvs = self.pvs(c_board, -beta, -alpha, depth - 1, c_line.clone());
+          score = -pvs.0;
+        }
       }
 
       if score >= beta {
-        return beta;
+        return (beta, c_line);
       }
       if score > alpha {
         alpha = score;
       }
     }
 
-    return alpha;
+    return (alpha, line);
   }
 
   fn quiesce(board: Board, mut alpha: f32, beta: f32) -> f32 {

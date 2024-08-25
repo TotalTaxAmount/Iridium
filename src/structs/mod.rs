@@ -293,9 +293,14 @@ pub struct Move {
 }
 
 impl fmt::Display for Move {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}{}", pos_to_alph(self.start).unwrap(), pos_to_alph(self.dest).unwrap())
-    }
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(
+      f,
+      "{}{}",
+      pos_to_alph(self.start).unwrap(),
+      pos_to_alph(self.dest).unwrap()
+    )
+  }
 }
 
 #[derive(Clone, Debug)]
@@ -321,7 +326,7 @@ impl fmt::Display for Line {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     let _ = write!(f, "currline ");
     for m in self.moves.clone() {
-      let _= write!(
+      let _ = write!(
         f,
         "{}{} ",
         pos_to_alph(m.start).unwrap(),

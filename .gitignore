@@ -2,4 +2,5 @@
 /.direnv
 /games
 /flamegraph
+/pkg
 Cargo.lock
