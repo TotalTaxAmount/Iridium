@@ -82,9 +82,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         print_bitboard(board.get_sides()[1])
       }
       "test" => {
-        // let test = Engine::pvs(board, -INFINITY, INFINITY, 2);
-
-        // println!("Test: {}", test);
+        let eval = Engine::evaluate(board);
+        println!("{}", eval);
       }
       "quit" => exit(0),
       _ => println!("Error unknown command: {}", command),
