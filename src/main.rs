@@ -1,10 +1,9 @@
 use engine::engine::Engine;
-use movegen::movegen::MoveGen;
 use parsers::{
   position::Position,
   time::{Constraints, Time},
 };
-use std::{f32::INFINITY, process::exit};
+use std::process::exit;
 use structs::{print_bitboard, Board};
 use threading::ThreadPool;
 use Iridium::pos_to_alph;
@@ -53,9 +52,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
       },
       "go" => {
         constraints = Time::parse_time(&args);
-        let moves = MoveGen::gen_moves(board, board.turn, true);
+        // let moves = MoveGen::gen_moves(board, board.turn, true);
 
-        println!("possible moves {}", moves.len());
+        // println!("possible moves {}", moves.len());
         let best_move = match thread_pool.search(board, board.turn, 2) {
           Some(m) => m,
           None => continue,

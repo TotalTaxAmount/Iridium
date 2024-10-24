@@ -1,6 +1,6 @@
 use core::fmt;
 use std::{
-  fmt::{write, Display},
+  fmt::Display,
   ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr},
   vec,
 };
@@ -319,6 +319,10 @@ impl Line {
 
   pub fn extend(&mut self, line: &Self) {
     self.moves.extend_from_slice(&line.moves);
+  }
+
+  pub fn get(self, i: usize) -> Option<Move> {
+    self.moves.get(i).copied()
   }
 }
 

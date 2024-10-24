@@ -1,10 +1,9 @@
-use core::borrow;
-use std::{alloc::System, arch::x86_64::_CMP_FALSE_OS, f32::INFINITY, thread::ScopedJoinHandle};
+use std::f32::INFINITY;
 
 use crate::{
   lib::bitcount,
   movegen::movegen::MoveGen,
-  structs::{print_bitboard, Board, Line, Move, Pieces, Sides},
+  structs::{Board, Line, Move, Pieces, Sides},
 };
 
 pub struct Engine {
@@ -112,7 +111,12 @@ impl Engine {
   ) -> (f32, Line) {
     if depth == 0 {
       return (
-        Engine::quiesce(board, alpha, beta) * if board.turn == Sides::WHITE { 1.0 } else { -1.0 },
+        Engine::quiesce(board, alpha, beta)
+          * if board.turn == Sides::WHITE {
+            1.0
+          } else {
+            -1.0
+          },
         line.clone(),
       );
     }
@@ -126,7 +130,8 @@ impl Engine {
       c_line.add_move(m);
 
       let mut score;
-      if self.current_depth <= 1 { // First move
+      if self.current_depth <= 1 {
+        // First move
         let pvs = self.pvs(c_board, -beta, -alpha, depth - 1, c_line);
         score = -pvs.0;
         c_line = pvs.1;
@@ -142,7 +147,6 @@ impl Engine {
       }
 
       if score >= beta {
-        println!("Hello");
         return (beta, c_line);
       }
       if score > alpha {
@@ -154,22 +158,26 @@ impl Engine {
     return (alpha, line);
   }
 
-  pub fn alpha_beta_max(&mut self, board: Board, mut alpha: f32, beta: f32, depth: u8, mut line: Line) -> (f32, Line) {
-    if depth == 0 { return (Self::evaluate(board), line) }
+  pub fn alpha_beta_max(
+    &mut self, board: Board, moves: Vec<Move>, mut alpha: f32, beta: f32, depth: u8, line: Line,
+  ) -> (f32, Line) {
+    if depth == 0 {
+      let eval = Self::evaluate(board);
+      return (eval, line);
+    }
 
-    self.current_depth += 1;
-    
     let mut best_score = -INFINITY;
     let mut best_line = line.clone();
-    for m in MoveGen::gen_moves(board, board.turn, true) {
+    for m in moves {
       let mut c_board = board.clone();
       let mut c_line = line.clone();
 
       c_line.add_move(m);
       c_board.apply_move(m);
-      let res = Self::alpha_beta_min(self, c_board, alpha, beta, depth - 1, c_line);
+
+      let res = Self::alpha_beta_min(self, c_board, MoveGen::gen_moves(c_board, c_board.turn, true), alpha, beta, depth - 1, c_line);
       let score = res.0;
-      
+
       if best_score < score {
         best_score = score;
         if score > alpha {
@@ -185,21 +193,28 @@ impl Engine {
     (best_score, best_line)
   }
 
-  pub fn alpha_beta_min(&mut self, board: Board, alpha: f32, mut beta: f32, depth: u8, mut line: Line) -> (f32, Line) {
-    if depth == 0 { return (Self::evaluate(board), line) }
+  pub fn alpha_beta_min(
+    &mut self, board: Board, moves: Vec<Move>, alpha: f32, mut beta: f32, depth: u8, line: Line,
+  ) -> (f32, Line) {
+    // println!("Alpha Min @ alpha = {} beta = {}", alpha, beta);
+    if depth == 0 {
+      let eval = Self::evaluate(board);
+      // println!("Eval Min @ depth = {} line = {} eval = {}", self.current_depth, line, eval);
+      return (eval, line);
+    }
 
     self.current_depth += 1;
 
     let mut best_score = INFINITY;
     let mut best_line = line.clone();
-    for m in MoveGen::gen_moves(board, board.turn, true) {
+    for m in moves {
       let mut c_board = board.clone();
       let mut c_line = line.clone();
 
       c_board.apply_move(m);
       c_line.add_move(m);
 
-      let res: (f32, Line) = Self::alpha_beta_max(self, c_board , alpha, beta, depth - 1, c_line);
+      let res: (f32, Line) = Self::alpha_beta_max(self, c_board, MoveGen::gen_moves(c_board, c_board.turn, true), alpha, beta, depth - 1, c_line);
       let score = res.0;
 
       if best_score > score {
@@ -211,6 +226,7 @@ impl Engine {
       }
 
       if score <= alpha {
+        println!("score = {} <= alpha {}", score, alpha);
         return (score, best_line);
       }
     }

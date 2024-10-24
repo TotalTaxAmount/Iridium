@@ -1,7 +1,4 @@
 use std::{cmp::min, vec};
-
-use Iridium::pos_to_alph;
-
 use crate::structs::{BitBoard, Board, Move, Pieces, Sides};
 
 pub struct MoveGen;

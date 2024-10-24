@@ -1,5 +1,5 @@
 use std::{
-  f32::INFINITY,
+  f32::{consts::E, INFINITY},
   thread::{Builder, JoinHandle},
   vec,
 };
@@ -7,14 +7,13 @@ use std::{
 use Iridium::pos_to_alph;
 
 use crate::{
-  engine::engine::Engine,
+  engine::{self, engine::Engine},
   movegen::movegen::MoveGen,
   structs::{Board, Line, Move, Sides},
 };
 
 pub struct ThreadPool {
-  pub threads: Vec<JoinHandle<(f32, Move, Line)>>,
-
+  pub threads: Vec<JoinHandle<(f32, Option<Move>, Line)>>,
   pub limit: u8,
 }
 
@@ -28,23 +27,23 @@ impl ThreadPool {
 
   pub fn search(&mut self, board: Board, side: Sides, depth: u8) -> Option<(Move, Line)> {
     let moves: Vec<Move> = MoveGen::gen_moves(board.clone(), side, true);
-    let num_moves = moves.len() as u8;
+    let num_moves = moves.len().try_into().unwrap();
     let mut best_move: Option<(Move, Line)> = None;
     let mut best_eval = if side == Sides::WHITE {
       -INFINITY
     } else {
       INFINITY
     };
-    // let mut best_eval = -INFINITY;
 
     let thread_limit = self.limit.min(num_moves);
 
-    let chuck_size = (moves.len() as f32 / thread_limit as f32).ceil() as usize;
+    let chuck_size = num_moves.div_ceil(thread_limit);
 
-    println!("{:?}", side);
-
-    for (i, chunk) in moves.chunks(chuck_size).map(|x| x.to_vec()).enumerate() {
-      let clone_board = board.clone();
+    for (i, chunk) in moves
+      .chunks(chuck_size.into())
+      .map(|x| x.to_vec())
+      .enumerate()
+    {
 
       let builder = Builder::new().name(format!("Eval thread builder {}", i).into());
 
@@ -55,47 +54,17 @@ impl ThreadPool {
           INFINITY
         };
 
-        // let mut best_eval = -INFINITY;
+        // let mut best_move = chunk[0];
+        // let mut best_line = Line::new();
 
-        let mut best_move = chunk[0];
-        let mut best_line = Line::new();
+        // let mut engine = Engine::new();
+        let mut engine: Engine = Engine::new();
 
-        for m in chunk {
-          let mut c_board = clone_board.clone();
-          let mut line = Line::new();
+        let res = engine.alpha_beta_max(board.clone(), chunk, -INFINITY, INFINITY, depth - 1, Line::new());
 
-          line.add_move(m);
-          c_board.apply_move(m);
+        
 
-          let mut engine = Engine::new();
-
-          // let pvs = engine.pvs(clone_board, -INFINITY, INFINITY, depth - 1, Line::new());
-          let res = engine.alpha_beta_max(c_board, -INFINITY, INFINITY, depth - 1, line);
-          let eval = res.0;
-          let line = res.1;
-          
-
-          println!(
-            "{} - {}{} - {:?} :: calls {} :: line {}",
-            eval,
-            pos_to_alph(m.start).unwrap(),
-            pos_to_alph(m.dest).unwrap(),
-            m.capture,
-            engine.current_depth,
-            line
-          );
-
-          if (side == Sides::WHITE && eval > best_eval)
-            || (side == Sides::BLACK && eval < best_eval)
-          {
-          // if eval > best_eval {
-            best_eval = eval;
-            best_move = m;
-          } else {
-            // println!("{:?} -- {} | {} {}", side, eval, best_eval, eval < best_eval);
-          }
-        }
-        (best_eval, best_move, Line::new())
+        (res.0, res.1.clone().get(0) , res.1)
       });
 
       match handle {
@@ -110,7 +79,10 @@ impl ThreadPool {
         // if eval > best_eval
         {
           best_eval = eval;
-          best_move = Some((m, line));
+          best_move = match m {
+              Some(m) => Some((m, line)),
+              None => None
+          }
         }
       }
     }

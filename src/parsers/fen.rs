@@ -1,9 +1,6 @@
 use std::{error, fmt};
 
-use crate::{
-  engine::engine::Engine,
-  structs::{BitBoard, Board, Pieces, Sides},
-};
+use crate::structs::{BitBoard, Board, Pieces, Sides};
 
 #[derive(Debug, Clone, Copy)]
 pub struct FenError;

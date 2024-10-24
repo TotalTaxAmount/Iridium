@@ -1,6 +1,6 @@
 use std::fmt::Error;
 
-use crate::structs::{print_bitboard, BitBoard, Board, Move, Pieces, Sides};
+use crate::structs::{BitBoard, Board, Move, Pieces, Sides};
 
 use crate::lib::alph_to_pos;
 
